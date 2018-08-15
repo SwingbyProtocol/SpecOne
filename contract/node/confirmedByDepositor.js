@@ -22,14 +22,15 @@ module.exports = async function (deployer, net, accounts) {
     const balance = await gen.balanceOf(address)
     console.log(balance.toNumber()/1e18)
 
-    let _aOfSat = 0.4 * 1e18
-    let _aOfWei = 36 * 1e18
-    let _pubkey = pubkey
+    let ID = process.env.ID
 
-    const submitOrder = await gen.submitOrder(_aOfSat, _aOfWei, _pubkey, {
+    let _txId = "0x44434bbe43903a1ea1a819a01b23d49f2b59122883142d0117043dced358db91"
+    let _secretHash = "0x44434bbe43903a1ea1a819a01b23d49f2b59122883142d0117043dced358db91"
+
+    const confirmByDepositor = await gen.confirmByDepositor(ID, _txId, _secretHash, {
         value: 0,
         from: address
     })
 
-    console.log(submitOrder.logs)
+    console.log(confirmByDepositor.logs)
 }

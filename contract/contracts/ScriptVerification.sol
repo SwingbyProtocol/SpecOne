@@ -6,7 +6,7 @@ import "./BTCLib.sol";
 contract ScriptVerification {
 
     event Verified(bytes32 _txId, uint _amount);
-
+    
     function verifyTx(
         bytes _rawTx, 
         bytes32 _txId, 
@@ -16,9 +16,12 @@ contract ScriptVerification {
     ) 
     public returns (bool) 
     {
-    
-        bytes32 txId = bytes32(flip32Bytes(uint(sha256(abi.encodePacked(sha256(_rawTx))))));
+        uint doubleHash = uint(sha256(abi.encodePacked(sha256(_rawTx))));
+        bytes32 txId = bytes32(flip32Bytes(doubleHash));
 
+        if (txId != _txId) {
+            return false;
+        }
         bytes20 outputAddress1;
         bytes20 outputAddress2;
         uint    outputAmount1;
@@ -28,9 +31,6 @@ contract ScriptVerification {
 
         (outputAmount1, outputAddress1, outputAmount2, outputAddress2) = BTCLib.getFirstTwoOutputs(_rawTx);
         
-        if (txId != _txId) {
-            return false;
-        }
         if (outputAddress1 == _beneficially) {
             if (satToValue(outputAmount1) == _amount + _fee) {
                 firstMatch = true;
@@ -42,6 +42,9 @@ contract ScriptVerification {
             }
         }
         if (!firstMatch && !secondMatch)
+            return false;
+
+        if (firstMatch && secondMatch)
             return false;
 
         emit Verified(txId, satToValue(outputAmount1));

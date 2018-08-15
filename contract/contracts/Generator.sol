@@ -20,6 +20,7 @@ contract Generator is FundManager, AddressManager {
         address depositor;
         uint    verifiedTime;
         bool    isMinable;
+        bool    isOpen;
     }
 
     Order[] private orders;
@@ -28,8 +29,12 @@ contract Generator is FundManager, AddressManager {
 
     address private burner;
 
-    event Submitted(uint _orderId, uint _aOfSat, bytes _pubkey);
-    event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
+    event OrderSubmitted(uint _orderId, uint _aOfSat, bytes _pubkey);
+    event ConfirmedByDepositor(bytes32 _secretHash, bytes32 _txId, address _depositor);
+    event Finalized(uint _orderId, uint _verifiedTime);
+    event ConfirmedByBurner(uint _orderId);
+    event MintedBTCT(uint _orderId, address _submitter, uint _aOfSat);
+    event Executed(uint _orderId, address _depositor, uint _aOfSat);
 
     constructor() public { 
         btct = new Token("TOKENX", "SGW", 18);
@@ -55,7 +60,8 @@ contract Generator is FundManager, AddressManager {
             submitter: msg.sender,
             depositor: 0x0,
             verifiedTime: 0,
-            isMinable: false
+            isMinable: false,
+            isOpen: true
         });
 
         orders.push(order);
@@ -63,7 +69,7 @@ contract Generator is FundManager, AddressManager {
         ethBalances[msg.sender] -= _aOfWei;
         lockedBalances[msg.sender] += _aOfWei;
 
-        emit Submitted(orders.length - 1, _aOfSat, _pubkey);
+        emit OrderSubmitted(orders.length - 1, _aOfSat, _pubkey);
 
     }
 
@@ -77,19 +83,24 @@ contract Generator is FundManager, AddressManager {
         order.txId = _txId;
         order.depositor = msg.sender;
 
-        emit ConfirmedByProcessor(_secretHash, _txId);
+        emit ConfirmedByDepositor(_secretHash, _txId, msg.sender);
 
     }
 
     // starting use btct for 2 weeeks 
-    function finalized(uint _orderId, bytes _secret) public {
+    function finalize(uint _orderId, bytes _secret) public {
         
         Order storage order = orders[_orderId];
+
+        require(order.submitter == msg.sender);
+
+        require(order.verifiedTime == 0);
 
         require(order.secretHash == sha256(_secret));
 
         order.verifiedTime = block.timestamp;
 
+        emit Finalized(_orderId, order.verifiedTime);
     }
 
     function confirmByBurner(uint _orderId) public {
@@ -99,20 +110,35 @@ contract Generator is FundManager, AddressManager {
         Order storage order = orders[_orderId];
 
         order.isMinable = true;
+
+        emit ConfirmedByBurner(_orderId);
     }
 
-    function mint(uint _orderId, bytes _secret) public {
+    function mint(uint _orderId) public {
         
         Order memory order = orders[_orderId];
         
         require(order.isMinable);
 
-        require(order.secretHash == sha256(_secret));
-
-        require(order.submitter == msg.sender);
-
         btct.mint(order.submitter, order.aOfSat);
 
+        emit MintedBTCT(_orderId, order.submitter, order.aOfSat);
+
+    }
+
+    function execute(uint _orderId) public {
+        
+        Order memory order = orders[_orderId];
+        
+        require(order.verifiedTime != 0);
+
+        require(order.isOpen);
+
+        if (block.timestamp >= order.verifiedTime + 2 weeks) {
+            order.depositor.transfer(order.aOfWei);
+            order.isOpen = false;
+            emit Executed(_orderId, order.depositor, order.aOfWei);
+        }
     }
 
     function getDeptByOrder(uint _orderId) public view returns (uint, address) {
@@ -125,5 +151,9 @@ contract Generator is FundManager, AddressManager {
 
     function getBTCT() public view returns (address) {
         return address(btct);
+    }
+
+    function getLockedBalances(address _user) public view returns (uint) {
+        return lockedBalances[_user];
     }
 }

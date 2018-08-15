@@ -22,14 +22,14 @@ module.exports = async function (deployer, net, accounts) {
     const balance = await gen.balanceOf(address)
     console.log(balance.toNumber()/1e18)
 
-    let _aOfSat = 0.4 * 1e18
-    let _aOfWei = 36 * 1e18
-    let _pubkey = pubkey
+    let ID = process.env.ID
 
-    const submitOrder = await gen.submitOrder(_aOfSat, _aOfWei, _pubkey, {
+    let _secret = "0xf0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
+
+    const finalize = await gen.finalize(ID, _secret, {
         value: 0,
         from: address
     })
 
-    console.log(submitOrder.logs)
+    console.log(finalize.logs)
 }
