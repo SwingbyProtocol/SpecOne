@@ -28,6 +28,8 @@ module.exports = async function (deployer, net, accounts) {
         value: 0,
         from: address
     })
+    send = await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [334345], id: 0})
 
+    console.log(send)
     console.log(execute.logs)
 }

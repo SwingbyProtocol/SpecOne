@@ -31,5 +31,5 @@ module.exports = async function (deployer, net, accounts) {
         from: address
     })
 
-    console.log(finalize.logs)
+    console.log(finalize.logs[0].args._verifiedTime.toNumber())
 }
