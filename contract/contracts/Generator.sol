@@ -87,8 +87,7 @@ contract Generator is FundManager, AddressManager {
 
     }
 
-    // starting use btct for 2 weeeks 
-    function finalize(uint _orderId, bytes _secret) public {
+    function confirmeBySubmitter(uint _orderId) public {
         
         Order storage order = orders[_orderId];
 
@@ -96,7 +95,18 @@ contract Generator is FundManager, AddressManager {
 
         require(order.verifiedTime == 0);
 
+        order.verifiedTime = 1;
+
+    }
+
+    // starting use btct for 2 weeeks 
+    function finalize(uint _orderId, bytes _secret) public {
+        
+        Order storage order = orders[_orderId];
+
         require(order.secretHash == sha256(_secret));
+
+        require(order.verifiedTime == 1);
 
         order.verifiedTime = block.timestamp;
 
