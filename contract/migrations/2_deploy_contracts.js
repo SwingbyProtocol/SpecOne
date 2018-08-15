@@ -9,7 +9,7 @@ module.exports = function (deployer) {
 
   let sv
   let we
-  let nativeToken
+  let nt
   let gen
 
   deployer.deploy(WitnessEngine).then(async () => {
@@ -17,7 +17,7 @@ module.exports = function (deployer) {
     we = await WitnessEngine.deployed()
     return deployer.deploy(Token, '232ss', 'STG', 18)
   }).then(async () => {
-    nativeToken = await Token.deployed()
+    nt = await Token.deployed()
     return deployer.deploy(Generator)
   }).then(async () => {
     gen = await Generator.deployed()
