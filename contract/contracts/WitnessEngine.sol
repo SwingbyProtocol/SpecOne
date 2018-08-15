@@ -18,7 +18,7 @@ contract WitnessEngine is FundManager {
 
     Vote[] private votes;
 
-    EIP20Interface public token;
+    ERC20 public token;
 
     modifier onlyWitness() {
         require(witnesses[msg.sender]);
@@ -35,12 +35,12 @@ contract WitnessEngine is FundManager {
 
     function setToken(address _token) public {
         require(address(token) == 0x0);
-        token = EIP20Interface(_token);
+        token = ERC20(_token);
     }
 
     function submitVote(uint _mode, address _user) public onlyWitness() {
         
-        uint256 requireBalance = 40000 * 10 ** token.decimals();
+        uint256 requireBalance = 40000 * 10 ** 18;
 
         require(tokenBalances[token][_user] >= requireBalance);
 

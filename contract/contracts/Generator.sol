@@ -1,13 +1,13 @@
 pragma solidity 0.4.24;
 
 import "./FundManager.sol";
+import "./Token.sol";
 
 
 contract Generator is FundManager {
 
     mapping (bytes32 => bool) private isUsed;
     mapping (address => uint) private lockedBalances;
-    mapping (uint => uint[]) private entangles;
 
     struct Order {
         uint    aOfSat;
@@ -23,16 +23,23 @@ contract Generator is FundManager {
 
     Order[] private orders;
 
-    EIP20Interface private btct;
+    Token private btct;
+
+    address private burner;
 
     event Submitted(uint _aOfSat, bytes _pubkey);
     event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
 
-    constructor(address _btct, address _burner) public { 
-        btct = EIP20Interface(_btct);
+    constructor() public { 
+        btct = new Token("TOKENX", "SGW", 18);
     }
 
-    function submitOrder(uint _aOfSat, uint _aOfWei, bytes _pubkey) public payable returns(bool) {
+    function setBurner(address _burner) public {
+        require(burner == 0x0);
+        burner = _burner;
+    }
+
+    function submitOrder(uint _aOfSat, uint _aOfWei, bytes _pubkey) public returns(bool) {
         
         require(_aOfWei <= balanceOf(msg.sender));
 
@@ -72,7 +79,7 @@ contract Generator is FundManager {
     }
 
     // starting use btct for 2 weeeks 
-    function finalized(uint _orderId, bytes _secret) {
+    function finalized(uint _orderId, bytes _secret) public {
         
         Order storage order = orders[_orderId];
 
@@ -84,14 +91,16 @@ contract Generator is FundManager {
 
     function confirmByBurner(uint _orderId) public {
 
+        require(msg.sender == burner);
+
         Order storage order = orders[_orderId];
 
         order.isMinable = true;
     }
 
-    function mint(uint _orderId, bytes _secret) {
+    function mint(uint _orderId, bytes _secret) public {
         
-        Order storage order = orders[_orderId];
+        Order memory order = orders[_orderId];
         
         require(order.isMinable);
 
@@ -100,6 +109,14 @@ contract Generator is FundManager {
         require(order.submitter == msg.sender);
 
         btct.mint(order.submitter, order.aOfSat);
+
+    }
+
+    function getDeptByOrder(uint _orderId) public view returns (uint, address) {
+        
+        Order memory order = orders[_orderId];
+
+        return (order.aOfSat, order.submitter);
 
     }
 }

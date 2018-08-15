@@ -3,12 +3,13 @@ pragma solidity 0.4.24;
 import "./ScriptVerification.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
+import "./GeneratorInterface.sol";
 
 
 contract Burner is FundManager {
 
     mapping (address => uint256) private lockedBalances;
-    mapping (bytes32 => bool) private isUsed;
+    mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
 
     struct Req {
@@ -25,23 +26,23 @@ contract Burner is FundManager {
         bool    isOpen;
     }
 
-    Req[] reqs;
+    Req[] private reqs;
 
     ScriptVerification private sv;
 
     WitnessEngine private we;
 
-    EIP20Interface private btct;
+    ERC20 private btct;
 
-    EIP20Interface private weth;
+    GeneratorInterface private gen;
 
     event Submitted(bytes32 _reqHash, bytes _redeemScript);
     event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
 
-    constructor(address _sv, address _we, address _btct, address _weth) public { 
+    constructor(address _sv, address _we, address _btct, address _weth, address _gen) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
-        btct = EIP20Interface(_btct);
+        gen = GeneratorInterface(_gen);
     }
 
     function submitReq(uint _aOfSat, uint _aOfWei, bool _isMinter, bytes _pubkey) public {
@@ -108,6 +109,8 @@ contract Burner is FundManager {
 
         require(req.provider != 0x0);
 
+        require(req.verifiedTime == 0);
+
         require(we.isWitness(msg.sender));
 
         require(sv.verifyTx(_rawTx, req.txId, req.rsHash, req.aOfSat, 0));
@@ -121,11 +124,15 @@ contract Burner is FundManager {
 
         address minter;
         uint aOfDebt;
+
+        require(!isUsed[_orderId]);
         
         (aOfDebt, minter) = gen.getDeptByOrder(_orderId);
 
         if (minter == req.provider && req.isMinter) {
             debts[minter] += aOfDebt;
+            gen.confirmByBurner(_orderId);
+            isUsed[_orderId] = true;
         }
     }
 
@@ -162,7 +169,7 @@ contract Burner is FundManager {
         
         tokenBalances[btct][_user] -= _amountOfSat;   
 
-        //btct.burn(_amountOfSat);
+        btct.burn(_amountOfSat);
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {

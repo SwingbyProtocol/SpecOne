@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "./EIP20Interface.sol";
+import "./ERC20.sol";
 
 
 contract FundManager {
@@ -22,7 +22,7 @@ contract FundManager {
 
     function depositToken(address _token, uint256 _value) public {
 
-        EIP20Interface token = EIP20Interface(_token);
+        ERC20 token = ERC20(_token);
 
         token.transferFrom(msg.sender, this, _value);   
 
@@ -33,7 +33,7 @@ contract FundManager {
 
     function withdrawToken(address _token) public {
         
-        EIP20Interface token = EIP20Interface(_token);
+        ERC20 token = ERC20(_token);
 
         uint256 value = tokenBalances[_token][msg.sender];
 

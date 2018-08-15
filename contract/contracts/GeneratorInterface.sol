@@ -4,5 +4,6 @@ pragma solidity 0.4.24;
 
 
 contract GeneratorInterface {
-    function getReqStatus(uint _reqId) public view returns (bool, address);
+    function getDeptByOrder(uint _orderId) public view returns (uint, address);
+    function confirmByBurner(uint _orderId) public;
 }
