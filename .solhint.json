@@ -1,0 +1,8 @@
+{
+    "extends": "default",
+    "rules": {
+        "no-inline-assembly": false,
+        "not-rely-on-time": false,
+        "indent": "warn"
+    }
+}

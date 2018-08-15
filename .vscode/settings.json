@@ -1,0 +1,4 @@
+{
+    "solidity.linter": "solhint",
+    "solidity.solhintRules": {}
+}
