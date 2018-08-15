@@ -39,10 +39,11 @@ contract Burner is FundManager {
     event Submitted(bytes32 _reqHash, bytes _redeemScript);
     event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
 
-    constructor(address _sv, address _we, address _btct, address _weth, address _gen) public { 
+    constructor(address _sv, address _we, address _gen) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
         gen = GeneratorInterface(_gen);
+        btct = ERC20(gen.getBTCT());
     }
 
     function submitReq(uint _aOfSat, uint _aOfWei, bool _isMinter, bytes _pubkey) public {

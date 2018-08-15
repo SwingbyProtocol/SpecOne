@@ -1,10 +1,11 @@
 pragma solidity 0.4.24;
 
 import "./FundManager.sol";
+import "./AddressManager.sol";
 import "./Token.sol";
 
 
-contract Generator is FundManager {
+contract Generator is FundManager, AddressManager {
 
     mapping (bytes32 => bool) private isUsed;
     mapping (address => uint) private lockedBalances;
@@ -27,7 +28,7 @@ contract Generator is FundManager {
 
     address private burner;
 
-    event Submitted(uint _aOfSat, bytes _pubkey);
+    event Submitted(uint _orderId, uint _aOfSat, bytes _pubkey);
     event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
 
     constructor() public { 
@@ -42,6 +43,8 @@ contract Generator is FundManager {
     function submitOrder(uint _aOfSat, uint _aOfWei, bytes _pubkey) public returns(bool) {
         
         require(_aOfWei <= balanceOf(msg.sender));
+
+        require(checkUserPubkey(msg.sender, _pubkey));
 
         Order memory order = Order({
             aOfSat: _aOfSat,
@@ -60,7 +63,7 @@ contract Generator is FundManager {
         ethBalances[msg.sender] -= _aOfWei;
         lockedBalances[msg.sender] += _aOfWei;
 
-        emit Submitted(_aOfSat, _pubkey);
+        emit Submitted(orders.length - 1, _aOfSat, _pubkey);
 
     }
 
@@ -118,5 +121,9 @@ contract Generator is FundManager {
 
         return (order.aOfSat, order.submitter);
 
+    }
+
+    function getBTCT() public view returns (address) {
+        return address(btct);
     }
 }

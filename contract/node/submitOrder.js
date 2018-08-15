@@ -19,10 +19,17 @@ module.exports = async function (deployer, net, accounts) {
 
     let gen = await Generator.deployed()
 
-    const deposit = await gen.deposit({
-        value: web3.toWei('24', 'ether'),
+    const balance = await gen.balanceOf(address)
+    console.log(balance.toNumber()/1e18)
+
+    let _aOfSat = 0.4 * 1e18
+    let _aOfWei = 36 * 1e18
+    let _pubkey = pubkey
+
+    const deposit = await gen.submitOrder(_aOfSat, _aOfWei, _pubkey, {
+        value: 0,
         from: address
     })
 
-    console.log(deposit.logs[0].args._value.toNumber())
+    console.log(deposit.logs)
 }
