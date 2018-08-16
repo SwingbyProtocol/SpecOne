@@ -36,8 +36,9 @@ contract Burner is FundManager {
 
     GeneratorInterface private gen;
 
-    event Submitted(bytes32 _reqHash, bytes _redeemScript);
+    event SubmittedReq(uint _orderId, uint _wethAmount, uint _aOfWei, bool _isMinter, bytes _pubkey);
     event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
+    event OrderSubmitted(uint _orderId, uint _aOfSat, bytes _pubkey);
 
     constructor(address _sv, address _we, address _gen) public { 
         sv = ScriptVerification(_sv);
@@ -51,10 +52,10 @@ contract Burner is FundManager {
         uint256 wethAmount;
 
         if (_isMinter) {
-            wethAmount = _aOfSat * 130 * getPrice();
+            wethAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
             
         } else {
-            wethAmount = _aOfSat * 13 * getPrice();
+            wethAmount = 1 * 10 ** 18 * (_aOfSat * 10 / getPrice()) / 100;
         }
 
         require(balanceOf(msg.sender) >= wethAmount);
@@ -77,6 +78,8 @@ contract Burner is FundManager {
             isOpen: true
         });
         reqs.push(req);
+
+        emit SubmittedReq(reqs.length - 1, wethAmount, _aOfWei, _isMinter, _pubkey);
     }
 
     function confirmByProvider(uint _reqId, bytes32 _txId, bytes _rs) public {
@@ -119,7 +122,7 @@ contract Burner is FundManager {
         req.verifiedTime = block.timestamp;
     }
 
-    function attach(uint _reqId, uint _orderId) {
+    function attach(uint _reqId, uint _orderId) public {
 
         Req storage req = reqs[_reqId];
 
@@ -145,23 +148,51 @@ contract Burner is FundManager {
 
         burnBTCT(req.submitter, req.aOfSat);
 
+        if (debts[req.provider] >= req.aOfSat) {
+            debts[req.provider] -= req.aOfSat;
+        } else if (debts[req.provider] < req.aOfSat) {
+            debts[req.provider] = 0;
+        }
+
         unlockSecurityDeposit(req.submitter, req.lockingAmount);
     }
 
-    function liquidate(uint _reqId) public {
+    function liquidateByTime(uint _reqId) public returns (bool) {
 
         Req storage req = reqs[_reqId];
 
-        require(req.isMinter);
+        require(block.timestamp >= req.verifiedTime + 2 weeks);
 
-        if (req.verifiedTime >= block.timestamp + 2 weeks) {
+        require(req.isOpen);
+
+        if (debts[req.provider] == 0) {
             req.isOpen = false;
-            // liquidate
+            return true;
+        } else if (debts[req.provider] > 0 && req.isMinter) {
+            
+            lockedBalances[req.submitter] = 0;
+            req.isOpen = false;
+            return true;
         }
+        return true;
+    }
+
+    function liquidateByPrice(uint _reqId) public returns (bool) {
+
+        Req storage req = reqs[_reqId];
+
+        uint limit = 1 * 10 ** 18 * (req.aOfSat * 120 / getPrice()) / 100;
+
+        if (limit > req.lockingAmount) {
+            lockedBalances[req.submitter] = 0;
+            req.isOpen = false;
+            return true;
+        }
+        return true;
     }
 
     function getPrice() public pure returns (uint) {
-        return 22222;
+        return 47860091570967499;
     }
 
     function burnBTCT(address _user, uint _amountOfSat) internal {
@@ -170,7 +201,7 @@ contract Burner is FundManager {
         
         tokenBalances[btct][_user] -= _amountOfSat;   
 
-        btct.burn(_amountOfSat);
+        btct.transfer(gen, _amountOfSat);
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {

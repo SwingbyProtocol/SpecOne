@@ -30,7 +30,7 @@ contract Generator is FundManager, AddressManager {
     address private burner;
 
     event OrderSubmitted(uint _orderId, uint _aOfSat, bytes _pubkey);
-    event ConfirmedByDepositor(bytes32 _secretHash, bytes32 _txId, address _depositor);
+    event OrderTaked(bytes32 _secretHash, bytes32 _txId, address _depositor);
     event Finalized(uint _orderId, uint _verifiedTime);
     event ConfirmedByBurner(uint _orderId);
     event MintedBTCT(uint _orderId, address _submitter, uint _aOfSat);
@@ -73,7 +73,7 @@ contract Generator is FundManager, AddressManager {
 
     }
 
-    function confirmByDepositor(uint _orderId, bytes32 _txId, bytes32 _secretHash) public {
+    function takeOrder(uint _orderId, bytes32 _txId, bytes32 _secretHash) public {
 
         Order storage order = orders[_orderId];
 
@@ -83,7 +83,7 @@ contract Generator is FundManager, AddressManager {
         order.txId = _txId;
         order.depositor = msg.sender;
 
-        emit ConfirmedByDepositor(_secretHash, _txId, msg.sender);
+        emit OrderTaked(_secretHash, _txId, msg.sender);
 
     }
 
@@ -126,11 +126,13 @@ contract Generator is FundManager, AddressManager {
 
     function mint(uint _orderId) public {
         
-        Order memory order = orders[_orderId];
+        Order storage order = orders[_orderId];
         
         require(order.isMinable);
 
         btct.mint(order.submitter, order.aOfSat);
+
+        order.isMinable = false;
 
         emit MintedBTCT(_orderId, order.submitter, order.aOfSat);
 
@@ -149,6 +151,11 @@ contract Generator is FundManager, AddressManager {
             order.isOpen = false;
             emit Executed(_orderId, order.depositor, order.aOfWei);
         }
+    }
+
+    function burnBTC() public {
+        uint balance = btct.balanceOf(this);
+        btct.burn(balance);
     }
 
     function getDeptByOrder(uint _orderId) public view returns (uint, address) {
