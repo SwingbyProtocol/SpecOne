@@ -31,8 +31,9 @@ contract Generator is FundManager, AddressManager {
 
     event OrderSubmitted(uint _orderId, uint _aOfSat, bytes _pubkey);
     event OrderTaked(bytes32 _secretHash, bytes32 _txId, address _depositor);
-    event Finalized(uint _orderId, uint _verifiedTime);
+    event ConfirmedBySubmitter(uint _orderId, address _submitter);
     event ConfirmedByBurner(uint _orderId);
+    event Finalized(uint _orderId, uint _verifiedTime);
     event MintedBTCT(uint _orderId, address _submitter, uint _aOfSat);
     event Executed(uint _orderId, address _depositor, uint _aOfSat);
 
@@ -96,6 +97,8 @@ contract Generator is FundManager, AddressManager {
         require(order.verifiedTime == 0);
 
         order.verifiedTime = 1;
+
+        emit ConfirmedBySubmitter(_orderId, order.submitter);
 
     }
 

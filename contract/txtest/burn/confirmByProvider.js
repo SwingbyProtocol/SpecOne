@@ -20,7 +20,7 @@ module.exports = async function (deployer, net, accounts) {
     let burn = await Burner.deployed()
 
     _aOfSat = web3.toWei(1, 'ether')
-    _aOfWei = web3.toWei(28, 'ether')
+    _aOfWei = web3.toWei(48, 'ether')
     _isMinter = true
     _pubkey = pubkey
 

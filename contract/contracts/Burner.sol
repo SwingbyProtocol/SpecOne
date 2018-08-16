@@ -12,7 +12,7 @@ contract Burner is FundManager {
     mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
 
-    struct Req {
+    struct Request {
         uint    aOfSat;
         bytes   pubkey;
         uint    lockingAmount;
@@ -26,7 +26,7 @@ contract Burner is FundManager {
         bool    isOpen;
     }
 
-    Req[] private reqs;
+    Request[] private requests;
 
     ScriptVerification private sv;
 
@@ -36,9 +36,9 @@ contract Burner is FundManager {
 
     GeneratorInterface private gen;
 
-    event SubmittedReq(uint _orderId, uint _wethAmount, uint _aOfWei, bool _isMinter, bytes _pubkey);
+    event SubmittedRequest(uint _reqId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
     event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
-    event OrderSubmitted(uint _orderId, uint _aOfSat, bytes _pubkey);
+    event OrderSubmitted(uint _reqId, uint _aOfSat, bytes _pubkey);
 
     constructor(address _sv, address _we, address _gen) public { 
         sv = ScriptVerification(_sv);
@@ -47,24 +47,24 @@ contract Burner is FundManager {
         btct = ERC20(gen.getBTCT());
     }
 
-    function submitReq(uint _aOfSat, uint _aOfWei, bool _isMinter, bytes _pubkey) public {
+    function submitRequest(uint _aOfSat, uint _aOfWei, bool _isMinter, bytes _pubkey) public {
 
-        uint256 wethAmount;
+        uint256 minLockAmount;
 
         if (_isMinter) {
-            wethAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
+            minLockAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
             
         } else {
-            wethAmount = 1 * 10 ** 18 * (_aOfSat * 10 / getPrice()) / 100;
+            minLockAmount = 1 * 10 ** 18 * (_aOfSat * 10 / getPrice()) / 100;
         }
 
-        require(balanceOf(msg.sender) >= wethAmount);
+        require(balanceOf(msg.sender) >= minLockAmount);
 
-        require(_aOfWei >= wethAmount);
+        require(_aOfWei >= minLockAmount);
 
         lockSecurityDeposit(msg.sender, _aOfWei);
 
-        Req memory req = Req({
+        Request memory req = Request({
             aOfSat: _aOfSat,
             pubkey: _pubkey,
             lockingAmount: _aOfWei,
@@ -77,14 +77,14 @@ contract Burner is FundManager {
             verifiedTime: 0,
             isOpen: true
         });
-        reqs.push(req);
+        requests.push(req);
 
-        emit SubmittedReq(reqs.length - 1, wethAmount, _aOfWei, _isMinter, _pubkey);
+        emit SubmittedRequest(requests.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _pubkey);
     }
 
     function confirmByProvider(uint _reqId, bytes32 _txId, bytes _rs) public {
 
-        Req storage req = reqs[_reqId];
+        Request storage req = requests[_reqId];
 
         bytes20 rsHash;
         bytes32 secretHash;
@@ -109,7 +109,7 @@ contract Burner is FundManager {
      */
     function confirmByWitness(uint _reqId, bytes _rawTx) public {
 
-        Req storage req = reqs[_reqId];
+        Request storage req = requests[_reqId];
 
         require(req.provider != 0x0);
 
@@ -124,7 +124,7 @@ contract Burner is FundManager {
 
     function attach(uint _reqId, uint _orderId) public {
 
-        Req storage req = reqs[_reqId];
+        Request storage req = requests[_reqId];
 
         address minter;
         uint aOfDebt;
@@ -132,6 +132,8 @@ contract Burner is FundManager {
         require(!isUsed[_orderId]);
         
         (aOfDebt, minter) = gen.getDeptByOrder(_orderId);
+        
+        require(aOfDebt == req.aOfSat);
 
         if (minter == req.provider && req.isMinter) {
             debts[minter] += aOfDebt;
@@ -142,7 +144,7 @@ contract Burner is FundManager {
 
     function execute(uint _reqId, bytes _secret) public {
 
-        Req storage req = reqs[_reqId]; 
+        Request storage req = requests[_reqId]; 
 
         require(req.secretHash == sha256(_secret));
 
@@ -153,13 +155,12 @@ contract Burner is FundManager {
         } else if (debts[req.provider] < req.aOfSat) {
             debts[req.provider] = 0;
         }
-
         unlockSecurityDeposit(req.submitter, req.lockingAmount);
     }
 
     function liquidateByTime(uint _reqId) public returns (bool) {
 
-        Req storage req = reqs[_reqId];
+        Request storage req = requests[_reqId];
 
         require(block.timestamp >= req.verifiedTime + 2 weeks);
 
@@ -179,7 +180,7 @@ contract Burner is FundManager {
 
     function liquidateByPrice(uint _reqId) public returns (bool) {
 
-        Req storage req = reqs[_reqId];
+        Request storage req = requests[_reqId];
 
         uint limit = 1 * 10 ** 18 * (req.aOfSat * 120 / getPrice()) / 100;
 
@@ -192,7 +193,7 @@ contract Burner is FundManager {
     }
 
     function getPrice() public pure returns (uint) {
-        return 47860091570967499;
+        return 69709409965386782;
     }
 
     function burnBTCT(address _user, uint _amountOfSat) internal {
