@@ -20,15 +20,14 @@ module.exports = async function (deployer, net, accounts) {
     let burn = await Burner.deployed()
 
     const ID = process.env.ID
-    const txId = "0xa4245a22e809698217cdbaaf18b6c9489559267ad4492cd4bf36a2ecd3b410c8"
-    const rs = "0x6304332a6b5bb175a820f4b937bbadbf3d64d6f7ba78672e59790f6047693172616c3d1d4f1bd440f56d8876a914cd5cab7ec76ad300712c02ccc51b464fdf7e5e06670483706b5bb17576a9142f5e9b3a149467d002195d790ad513eac7496aa86888ac"
+    const rawTx = "0x0100000001305355601d93d7436c42f2fb7582e676efe28c2f6e5e26d07ef2583abb06f10d000000006a473044022035fe371726ab88511cbac914d3f4011797fae13a0dbadad534280309f48ae323022026e6c26dac7e03c2a955c995fe7b5f1f34f63c3167dfa3320d4b1f7eec5ff3ec0121035aeb11b993e293de4bf0329a7dfef76d765985ffc15191c5bb15fef518167ecfffffffff0280841e000000000017a9147231fad8f31e581364d1b78d0778bee29b8420ea87706db900000000001976a9143c3a332e02196b417425bb7b0fcdd8a8e809d10188ac00000000"
 
-    const confirmByProvider = await burn.confirmByProvider(ID, txId, rs, {
+    const confirmByWitness = await burn.confirmByWitness(ID, rawTx, {
         value: 0,
         from: address
     })
 
-    console.log(confirmByProvider.logs)
+    console.log(confirmByWitness.logs)
     // console.log(submitReq.logs)
 
 }

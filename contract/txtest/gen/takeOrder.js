@@ -27,10 +27,10 @@ module.exports = async function (deployer, net, accounts) {
     let _txId = "0x44434bbe43903a1ea1a819a01b23d49f2b59122883142d0117043dced358db91"
     let _secretHash = "0x44434bbe43903a1ea1a819a01b23d49f2b59122883142d0117043dced358db91"
 
-    const confirmByDepositor = await gen.confirmByDepositor(ID, _txId, _secretHash, {
+    const takeOrder = await gen.takeOrder(ID, _txId, _secretHash, {
         value: 0,
         from: address
     })
 
-    console.log(confirmByDepositor.logs)
+    console.log(takeOrder.logs)
 }

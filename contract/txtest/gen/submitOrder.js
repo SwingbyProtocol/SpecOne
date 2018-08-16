@@ -22,7 +22,7 @@ module.exports = async function (deployer, net, accounts) {
     const balance = await gen.balanceOf(address)
     console.log(balance.toNumber()/1e18)
 
-    let _aOfSat = 0.4 * 1e18
+    let _aOfSat = 0.02 * 1e18
     let _aOfWei = 36 * 1e18
     let _pubkey = pubkey
 

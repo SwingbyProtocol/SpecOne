@@ -37,7 +37,10 @@ contract Burner is FundManager {
     GeneratorInterface private gen;
 
     event SubmittedRequest(uint _reqId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
-    event ConfirmedByProcessor(bytes32 _reqHash, bytes32 _txId);
+    event ConfirmedByProvider(uint _reqId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
+    event ConfirmedByWitness(uint _reqId, address _witness, uint _verifiedTime);
+    event Attached(uint _reqId, uint _orderId);
+
     event OrderSubmitted(uint _reqId, uint _aOfSat, bytes _pubkey);
 
     constructor(address _sv, address _we, address _gen) public { 
@@ -89,6 +92,8 @@ contract Burner is FundManager {
         bytes20 rsHash;
         bytes32 secretHash;
 
+        require(req.secretHash == 0x0);
+
         (rsHash, secretHash) = sv.redeemScriptToSecretHash(_rs);
 
         req.rsHash = rsHash;
@@ -96,7 +101,7 @@ contract Burner is FundManager {
         req.txId = _txId;
         req.provider = msg.sender;
 
-        emit ConfirmedByProcessor(secretHash, _txId);
+        emit ConfirmedByProvider(_reqId, req.aOfSat, rsHash, secretHash, _txId, _rs);
 
     }
 
@@ -120,31 +125,37 @@ contract Burner is FundManager {
         require(sv.verifyTx(_rawTx, req.txId, req.rsHash, req.aOfSat, 0));
 
         req.verifiedTime = block.timestamp;
+
+        emit ConfirmedByWitness(_reqId, msg.sender, req.verifiedTime);
     }
 
     function attach(uint _reqId, uint _orderId) public {
 
         Request storage req = requests[_reqId];
 
-        address minter;
+        address provider;
         uint aOfDebt;
 
         require(!isUsed[_orderId]);
         
-        (aOfDebt, minter) = gen.getDeptByOrder(_orderId);
+        (aOfDebt, provider) = gen.getDeptByOrder(_orderId);
         
         require(aOfDebt == req.aOfSat);
 
-        if (minter == req.provider && req.isMinter) {
-            debts[minter] += aOfDebt;
+        if (provider == req.provider && req.isMinter) {
+            debts[provider] += aOfDebt;
             gen.confirmByBurner(_orderId);
             isUsed[_orderId] = true;
+            emit Attached(_reqId, _orderId);
         }
+        
     }
 
     function execute(uint _reqId, bytes _secret) public {
 
         Request storage req = requests[_reqId]; 
+
+        require(req.verifiedTime != 0);
 
         require(req.secretHash == sha256(_secret));
 
@@ -161,6 +172,8 @@ contract Burner is FundManager {
     function liquidateByTime(uint _reqId) public returns (bool) {
 
         Request storage req = requests[_reqId];
+
+        require(req.verifiedTime != 0);
 
         require(block.timestamp >= req.verifiedTime + 2 weeks);
 
@@ -182,6 +195,8 @@ contract Burner is FundManager {
 
         Request storage req = requests[_reqId];
 
+        require(req.verifiedTime != 0);
+
         uint limit = 1 * 10 ** 18 * (req.aOfSat * 120 / getPrice()) / 100;
 
         if (limit > req.lockingAmount) {
@@ -194,6 +209,10 @@ contract Burner is FundManager {
 
     function getPrice() public pure returns (uint) {
         return 69709409965386782;
+    }
+
+    function getDebts(address _provider) public view returns (uint) {
+        return debts[_provider];
     }
 
     function burnBTCT(address _user, uint _amountOfSat) internal {

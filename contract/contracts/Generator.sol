@@ -29,8 +29,8 @@ contract Generator is FundManager, AddressManager {
 
     address private burner;
 
-    event OrderSubmitted(uint _orderId, uint _aOfSat, bytes _pubkey);
-    event OrderTaked(bytes32 _secretHash, bytes32 _txId, address _depositor);
+    event OrderSubmitted(uint _orderId, address _submitter, uint _aOfSat, bytes _pubkey);
+    event OrderTaked(uint _orderId, bytes32 _secretHash, bytes32 _txId, address _depositor);
     event ConfirmedBySubmitter(uint _orderId, address _submitter);
     event ConfirmedByBurner(uint _orderId);
     event Finalized(uint _orderId, uint _verifiedTime);
@@ -70,7 +70,7 @@ contract Generator is FundManager, AddressManager {
         ethBalances[msg.sender] -= _aOfWei;
         lockedBalances[msg.sender] += _aOfWei;
 
-        emit OrderSubmitted(orders.length - 1, _aOfSat, _pubkey);
+        emit OrderSubmitted(orders.length - 1, msg.sender, _aOfSat, _pubkey);
 
     }
 
@@ -84,7 +84,7 @@ contract Generator is FundManager, AddressManager {
         order.txId = _txId;
         order.depositor = msg.sender;
 
-        emit OrderTaked(_secretHash, _txId, msg.sender);
+        emit OrderTaked(_orderId, _secretHash, _txId, msg.sender);
 
     }
 
@@ -121,6 +121,8 @@ contract Generator is FundManager, AddressManager {
         require(msg.sender == burner);
 
         Order storage order = orders[_orderId];
+
+        require(order.verifiedTime >= 1);
 
         order.isMinable = true;
 
