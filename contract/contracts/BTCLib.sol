@@ -98,7 +98,8 @@
 // Addresses are the scriptHash with a version prefix of 5, encoded as
 // Base58check. These addresses begin with a '3'.
 
-pragma solidity ^0.4.18;
+pragma solidity 0.4.24;
+
 
 // parse a raw bitcoin transaction byte array
 library BTCLib {
@@ -145,10 +146,13 @@ library BTCLib {
             + uint64(data[pos + 7]) * 2 ** 56;
         }
     }
+
     // scan the full transaction bytes and return the first two output
     // values (in satoshis) and addresses (in binary)
-    function getFirstTwoOutputs(bytes txBytes) public pure
-             returns (uint, bytes20, uint, bytes20)
+    function getFirstTwoOutputs(
+        bytes txBytes
+    ) 
+    public pure returns (uint, bytes20, uint, bytes20) 
     {
         uint pos;
         uint[] memory input_script_lens = new uint[](2);
@@ -177,8 +181,12 @@ library BTCLib {
     // of the inputs.
     // takes a 'stop' argument which sets the maximum number of
     // outputs to scan through. stop=0 => scan all.
-    function scanInputs(bytes _txBytes, uint _pos, uint _stop) public pure
-             returns (uint[], uint)
+    function scanInputs(
+        bytes _txBytes, 
+        uint _pos, 
+        uint _stop
+    ) 
+    public pure returns (uint[], uint) 
     {
         uint n_inputs;
         uint halt;
@@ -204,13 +212,18 @@ library BTCLib {
 
         return (script_lens, pos);
     }
+
     // scan the outputs and find the values and script lengths.
     // return array of values, array of script lengths and the
     // end position of the outputs.
     // takes a 'stop' argument which sets the maximum number of
     // outputs to scan through. stop=0 => scan all.
-    function scanOutputs(bytes txBytes, uint _pos, uint _stop) public pure
-             returns (uint[], uint[], uint[], uint)
+    function scanOutputs(
+        bytes txBytes, 
+        uint _pos, 
+        uint _stop
+    ) 
+    public pure returns (uint[], uint[], uint[], uint)
     {
         uint n_outputs;
         uint halt;
@@ -241,6 +254,7 @@ library BTCLib {
 
         return (output_values, script_starts, script_lens, pos);
     }
+
     // Slice 20 contiguous bytes from bytes `data`, starting at `start`
     function sliceBytes20(bytes data, uint start) public pure returns (bytes20) {
         uint160 slice = 0;
@@ -249,6 +263,7 @@ library BTCLib {
         }
         return bytes20(slice);
     }
+
     // returns true if the bytes located in txBytes by pos and
     // script_len represent a P2PKH script
     function isP2PKH(bytes txBytes, uint pos, uint script_len) pure public returns (bool) {
@@ -259,6 +274,7 @@ library BTCLib {
             && (txBytes[pos + 23] == 0x88)  // OP_EQUALVERIFY
             && (txBytes[pos + 24] == 0xac); // OP_CHECKSIG
     }
+
     // returns true if the bytes located in txBytes by pos and
     // script_len represent a P2SH script
     function isP2SH(bytes txBytes, uint pos, uint script_len) pure public returns (bool) {
@@ -267,11 +283,16 @@ library BTCLib {
             && (txBytes[pos + 1] == 0x14)   // bytes to push
             && (txBytes[pos + 22] == 0x87); // OP_EQUAL
     }
+
     // Get the pubkeyhash / scripthash from an output script. Assumes
     // pay-to-pubkey-hash (P2PKH) or pay-to-script-hash (P2SH) outputs.
     // Returns the pubkeyhash/ scripthash, or zero if unknown output.
-    function parseOutputScript(bytes txBytes, uint pos, uint script_len) public pure
-             returns (bytes20)
+    function parseOutputScript(
+        bytes txBytes, 
+        uint pos, 
+        uint script_len
+    ) 
+    public pure returns (bytes20)
     {
         if (isP2PKH(txBytes, pos, script_len)) {
             return sliceBytes20(txBytes, pos + 3);

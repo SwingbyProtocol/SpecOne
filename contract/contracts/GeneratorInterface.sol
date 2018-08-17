@@ -7,4 +7,5 @@ contract GeneratorInterface {
     function getDeptByOrder(uint _orderId) public view returns (uint, address);
     function confirmByBurner(uint _orderId) public;
     function getBTCT() public view returns (address);
+    function burnBTCT(uint _aOfSat) public;
 }

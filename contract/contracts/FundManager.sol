@@ -9,8 +9,8 @@ contract FundManager {
 
     mapping(address => mapping(address => uint256)) public tokenBalances;
 
-    event DepositedToken(address _token, address _from, uint256 _value);
-    event WithdrewToken(address _token, address _to, uint256 _value);
+    event TokenDeposited(address _token, address _from, uint256 _value);
+    event TokenWithdrew(address _token, address _to, uint256 _value);
 
     event Deposited(address _from, uint256 _value);
     event Withdrew(address _to, uint256 _value);
@@ -28,7 +28,7 @@ contract FundManager {
 
         tokenBalances[_token][msg.sender] += _value;    
 
-        emit DepositedToken(_token, msg.sender, _value);
+        emit TokenDeposited(_token, msg.sender, _value);
     }
 
     function withdrawToken(address _token) public {
@@ -41,7 +41,7 @@ contract FundManager {
 
         require(token.transfer(msg.sender, value));   
 
-        emit WithdrewToken(_token, msg.sender, value);
+        emit TokenWithdrew(_token, msg.sender, value);
     }
 
     function deposit() public payable {

@@ -4,6 +4,7 @@ import "./ScriptVerification.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
 import "./GeneratorInterface.sol";
+import "./TrustedOracleInterface.sol";
 
 
 contract Burner is FundManager {
@@ -36,18 +37,20 @@ contract Burner is FundManager {
 
     GeneratorInterface private gen;
 
-    event SubmittedRequest(uint _reqId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
+    TrustedOracleInterface private oracle;
+
+    event RequestSubmitted(uint _reqId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
     event ConfirmedByProvider(uint _reqId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
     event ConfirmedByWitness(uint _reqId, address _witness, uint _verifiedTime);
     event Attached(uint _reqId, uint _orderId);
+    event Executed(uint _reqId, address _provider, bytes _secret, uint _aOfSat);
 
-    event OrderSubmitted(uint _reqId, uint _aOfSat, bytes _pubkey);
-
-    constructor(address _sv, address _we, address _gen) public { 
+    constructor(address _sv, address _we, address _gen, address _oracle) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
         gen = GeneratorInterface(_gen);
         btct = ERC20(gen.getBTCT());
+        oracle = TrustedOracleInterface(_oracle);
     }
 
     function submitRequest(uint _aOfSat, uint _aOfWei, bool _isMinter, bytes _pubkey) public {
@@ -82,7 +85,7 @@ contract Burner is FundManager {
         });
         requests.push(req);
 
-        emit SubmittedRequest(requests.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _pubkey);
+        emit RequestSubmitted(requests.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _pubkey);
     }
 
     function confirmByProvider(uint _reqId, bytes32 _txId, bytes _rs) public {
@@ -159,6 +162,8 @@ contract Burner is FundManager {
 
         require(req.secretHash == sha256(_secret));
 
+        require(balanceOfToken(btct, req.submitter) >= req.aOfSat);
+
         burnBTCT(req.submitter, req.aOfSat);
 
         if (debts[req.provider] >= req.aOfSat) {
@@ -167,6 +172,8 @@ contract Burner is FundManager {
             debts[req.provider] = 0;
         }
         unlockSecurityDeposit(req.submitter, req.lockingAmount);
+
+        emit Executed(_reqId, req.provider, _secret, req.aOfSat);
     }
 
     function liquidateByTime(uint _reqId) public returns (bool) {
@@ -199,7 +206,7 @@ contract Burner is FundManager {
 
         uint limit = 1 * 10 ** 18 * (req.aOfSat * 120 / getPrice()) / 100;
 
-        if (limit > req.lockingAmount) {
+        if (req.lockingAmount < limit) {
             lockedBalances[req.submitter] = 0;
             req.isOpen = false;
             return true;
@@ -207,8 +214,8 @@ contract Burner is FundManager {
         return true;
     }
 
-    function getPrice() public pure returns (uint) {
-        return 69709409965386782;
+    function getPrice() public view returns (uint) {
+        return oracle.getPrice();
     }
 
     function getDebts(address _provider) public view returns (uint) {
@@ -222,6 +229,8 @@ contract Burner is FundManager {
         tokenBalances[btct][_user] -= _amountOfSat;   
 
         btct.transfer(gen, _amountOfSat);
+
+        gen.burnBTCT(_amountOfSat);
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {

@@ -78,10 +78,10 @@ module.exports = async function (deployer, net, accounts) {
             confirmedBySubmitter(gen, result.args)
         if (result.event == "Finalized")
             finalized(gen, result.args)
-        if (result.event == "MintedBTCT")
-            mintedBTCT(gen, result.args)
-        if (result.event == "Claimed")
-            claimed(result.args)
+        if (result.event == "BTCTMinted")
+            btctMinted(gen, result.args)
+        if (result.event == "Executed")
+            executed(gen, result.args)
 
     });
 
@@ -97,14 +97,19 @@ module.exports = async function (deployer, net, accounts) {
             addedNewPrice(result.args)
         if (result.event == 'Deposited')
             deposited(burner, result.args)
-        if (result.event == 'SubmittedRequest')
-            submittedRequest(burner, result.args)
+        if (result.event == 'RequestSubmitted')
+            requestSubmitted(burner, result.args)
         if (result.event == 'ConfirmedByProvider')
             confirmedByProvider(burner, result.args)
         if (result.event == "ConfirmedByWtitness")
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
             attached(burner, result.args)
+        if (result.event == "TokenDeposited")
+            tokenDeposited(burner, result.args)
+        if (result.event == "Executed")
+            burnExecuted(burner, result.args)
+
     })
 
 
@@ -117,7 +122,7 @@ function deposited(contract, args) {
 
 
 function orderSubmitted(contract, args) {
-    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
+    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18} ethLimit: ${args._ethLimit.toNumber()/1e18}`)
     showBalance(contract, args._submitter, args)
 }
 
@@ -134,33 +139,26 @@ function finalized(contract, args) {
     log(contract, `Finalized ID: ${args._orderId.toNumber()} verifiedTime: ${args._verifiedTime} `)
 }
 
+function executed(contract, args) {
+    log(contract, `Executed ID: ${args._orderId.toNumber()} Depositor: ${args._depositor} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
+}
 
-function mintedBTCT(contract, args) {
-    log(contract, `MintedBTCT ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
+
+function btctMinted(contract, args) {
+    log(contract, `BTCTMinted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
     getDebts(burner, args._submitter)
 }
 
-
-
-function canceledAuction(args) {
-    log(contract, `CanceledOrder ID: ${args._id_a.toNumber()}`)
-    showBalance(args._ethSeller, args)
+function tokenDeposited(contract, args) {
+    log(contract, `TokenDeposited ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
 }
 
 
-function confirmedBySeller(args) {
-    log(contract, `ConfirmedBySeller ID: ${args._id_o.toNumber()}`)
-}
 
-function bid(args) {
-    log(contract, `Bid ID: ${args._id_o.toNumber()} from: ${args._ethBuyer} aOfSat: ${args._aOfSat}`)
-    log(contract, `Bid txId =: ${args._txId} Secret =: ${args._secret}`)
-    getAuctionStatus(args._deployed)
-}
 
-function claimed(args) {
-    log(contract, `Claimed ID: ${args._id_a.toNumber()} ethBuyer: ${args._ethBuyer} amount: ${args._amount/1e18}`)
-}
+
+
+
 
 function addedNewPrice(contract, args) {
     log(contract, `AddedNewPrice: pair: ${args._pair} price: ${args._price/1e18} priceOfEMA: ${args._priceOfEMA/1e18}`)
@@ -186,9 +184,9 @@ async function getDebts(contract, provider) {
     log(contract, `Provider-Debts : ${provider} aOfSat: ${debts.toNumber() /1e18}`)
 }
 
-function submittedRequest(contract, args) {
-    log(contract, `SubmittedRequest ID: ${args._reqId.toNumber()}, ${args._user} aOfSat: ${args._aOfSat.toNumber()/1e18} minLock =: ${args._mLockAmount.toNumber() /1e18} aOfWei: ${args._aOfWei.toNumber() / 1e18}`)
-    log(contract, `SubmittedRequest pubkey: ${args._pubkey}`)
+function requestSubmitted(contract, args) {
+    log(contract, `RequestSubmitted ID: ${args._reqId.toNumber()}, ${args._user} aOfSat: ${args._aOfSat.toNumber()/1e18} minLock =: ${args._mLockAmount.toNumber() /1e18} aOfWei: ${args._aOfWei.toNumber() / 1e18}`)
+    log(contract, `RequestSubmitted pubkey: ${args._pubkey}`)
     getPrice(contract)
     showBalance(contract, args._user, args)
 }
@@ -204,6 +202,11 @@ function confirmedByWitness(contract, args) {
 
 function attached(contract, args) {
     log(contract, `Attached ReqID: ${args._reqId.toNumber()} OrderId: ${args._orderId.toNumber()}`)
+}
+
+function burnExecuted(contract, args) {
+    log(contract, `BurnExecuted ID: ${args._reqId.toNumber()} provider: ${args._provider} secret: ${args._secret} aOfSat: ${args._aOfSat.toNumber()/1e18}`)
+    getDebts(contract, args._provider)
 }
 
 let checkHTLC = function (args, isTestnet) {

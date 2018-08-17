@@ -18,11 +18,13 @@ module.exports = function (deployer) {
     return deployer.deploy(Token, '232ss', 'STG', 18)
   }).then(async () => {
     nt = await Token.deployed()
-    return deployer.deploy(Generator)
+
+    const oracle = "0xd2330a9f6dde4715f540d1669bf75e89a1b4fbbc"
+    return deployer.deploy(Generator, oracle)
   }).then(async () => {
     gen = await Generator.deployed()
 
-    return deployer.deploy(Burner, sv.address, we.address, gen.address)
+    return deployer.deploy(Burner, sv.address, we.address, gen.address, oracle)
   }).then(async () => {
     const burner = await Burner.deployed()
 
