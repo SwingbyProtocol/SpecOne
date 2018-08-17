@@ -41,7 +41,7 @@ contract Generator is FundManager, AddressManager {
     event Executed(uint _orderId, address _depositor, uint _aOfSat);
 
     constructor(address _oracle) public { 
-        btct = new Token("BTCTtest", "tBTC", 18);
+        btct = new Token("BTCTtest", "tBTCT", 18);
         oracle = TrustedOracleInterface(_oracle);
     }
 
