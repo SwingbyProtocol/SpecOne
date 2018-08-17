@@ -24,14 +24,6 @@ ACCOUNT=0 ID=0 truffle exec txtest/burn/attach.js
 
 ACCOUNT=0 ID=0 truffle exec txtest/gen/mint.js
 
+ACCOUNT=0 ID=0 truffle exec txtest/burn/depositToken.js 
 
-#ACCOUNT=1 truffle exec node/seller/submitAuction.js 
-
-#ACCOUNT=2 ID=0 AMOUNT=0 truffle exec node/buyer/submitOrder.js 
-
-#ACCOUNT=1 ID=0 truffle exec node/seller/confirmedBySeller.js 
-
-#ACCOUNT=0 ID=0 truffle exec node/witness/confirmedByWitness.js 
-
-#ACCOUNT=1 ID=0 truffle exec node/seller/startAuction.js 
-
+ACCOUNT=0 ID=0 truffle exec txtest/burn/execute.js 

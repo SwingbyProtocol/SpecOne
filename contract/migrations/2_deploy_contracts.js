@@ -11,6 +11,7 @@ module.exports = function (deployer) {
   let we
   let nt
   let gen
+  let oracleAddress
 
   deployer.deploy(WitnessEngine).then(async () => {
     sv = await ScriptVerification.deployed()
@@ -19,18 +20,15 @@ module.exports = function (deployer) {
   }).then(async () => {
     nt = await Token.deployed()
 
-    const oracle = "0xd2330a9f6dde4715f540d1669bf75e89a1b4fbbc"
-    return deployer.deploy(Generator, oracle)
+    oracleAddress = "0xee4f30cc8891ea637cadf08f113ba4658491d4ed"
+    return deployer.deploy(Generator, oracleAddress)
   }).then(async () => {
     gen = await Generator.deployed()
 
-    return deployer.deploy(Burner, sv.address, we.address, gen.address, oracle)
+    return deployer.deploy(Burner, sv.address, we.address, gen.address, oracleAddress)
   }).then(async () => {
     const burner = await Burner.deployed()
 
     const setBurner = await gen.setBurner(burner.address)
-  
-
-    console.log(setBurner.logs)
   })
 }

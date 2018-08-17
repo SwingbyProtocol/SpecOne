@@ -116,13 +116,13 @@ module.exports = async function (deployer, net, accounts) {
 }
 
 function deposited(contract, args) {
-    log(contract, `Deposited by: ${args._from} ${args._value.toNumber() / 1e18} `)
+    log(contract, `Deposited by: ${args._from} ${args._value.toNumber() / 1e18}`)
     showBalance(contract, args._from, args)
 }
 
 
 function orderSubmitted(contract, args) {
-    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18} ethLimit: ${args._ethLimit.toNumber()/1e18}`)
+    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber()/1e18} aOfWei: ${args._aOfWei.toNumber()/1e18} ethLimit: ${args._ethLimit.toNumber()/1e18}`)
     showBalance(contract, args._submitter, args)
 }
 

@@ -32,7 +32,7 @@ contract Generator is FundManager, AddressManager {
 
     address private burner;
 
-    event OrderSubmitted(uint _orderId, address _submitter, uint _aOfSat, uint _ethLimit, bytes _pubkey);
+    event OrderSubmitted(uint _orderId, address _submitter, uint _aOfSat, uint _aOfWei, uint _ethLimit, bytes _pubkey);
     event OrderTaked(uint _orderId, bytes32 _secretHash, bytes32 _txId, address _depositor);
     event ConfirmedBySubmitter(uint _orderId, address _submitter);
     event ConfirmedByBurner(uint _orderId);
@@ -41,7 +41,7 @@ contract Generator is FundManager, AddressManager {
     event Executed(uint _orderId, address _depositor, uint _aOfSat);
 
     constructor(address _oracle) public { 
-        btct = new Token("TOKENX", "SGW", 18);
+        btct = new Token("BTCTtest", "tBTC", 18);
         oracle = TrustedOracleInterface(_oracle);
     }
 
@@ -82,7 +82,7 @@ contract Generator is FundManager, AddressManager {
         ethBalances[msg.sender] -= _aOfWei;
         lockedBalances[msg.sender] += _aOfWei;
 
-        emit OrderSubmitted(orders.length - 1, msg.sender, _aOfSat, ethlimit, _pubkey);
+        emit OrderSubmitted(orders.length - 1, msg.sender, _aOfSat, _aOfWei, ethlimit, _pubkey);
 
     }
 
@@ -193,11 +193,11 @@ contract Generator is FundManager, AddressManager {
         return lockedBalances[_user];
     }
 
-    function getPrice() public pure returns (uint) {
-        return 69709409965386782;
+    function getPrice() public view returns (uint) {
+        return oracle.getPrice();
     }
 
-    function getAssistPrice() public pure returns (uint, uint) {
+    function getAssistPrice() public view returns (uint, uint) {
         uint price = getPrice();
         uint upSide = price * 105 / 100; // 5% of price;
         uint downSide = price * 95 / 100; // 5% of price;
