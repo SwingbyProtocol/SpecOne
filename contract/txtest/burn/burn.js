@@ -19,18 +19,15 @@ module.exports = async function (deployer, net, accounts) {
 
     let swingby = await Swingby.deployed()
 
-    const ID = process.env.ID
-    const txId = "0xa4245a22e809698217cdbaaf18b6c9489559267ad4492cd4bf36a2ecd3b410c8"
-    const rs = "0x6304332a6b5bb175a820f4b937bbadbf3d64d6f7ba78672e59790f6047693172616c3d1d4f1bd440f56d8876a914cd5cab7ec76ad300712c02ccc51b464fdf7e5e06670483706b5bb17576a9142f5e9b3a149467d002195d790ad513eac7496aa86888ac"
+    let ID = process.env.ID
+    let secret = "0xc172d9303c8f97262c9809fcbbe2649b5be7e62ebc3c1788b60f978653257cda"
 
-    const confirmByProvider = await swingby.confirmByProvider(ID, txId, rs, {
+    const execute = await swingby.burn(ID, secret, {
         value: 0,
         from: address
     })
 
-    console.log(confirmByProvider.logs)
+    console.log(execute.logs)
     process.exit()
-
-    // console.log(submitReq.logs)
 
 }

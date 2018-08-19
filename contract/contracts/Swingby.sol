@@ -3,11 +3,10 @@ pragma solidity 0.4.24;
 import "./ScriptVerification.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
-import "./GeneratorInterface.sol";
 import "./TrustedOracleInterface.sol";
 
 
-contract Burner is FundManager {
+contract Swingby is FundManager {
 
     mapping (address => uint256) private lockedBalances;
     mapping (uint => bool) private isUsed;
@@ -33,9 +32,7 @@ contract Burner is FundManager {
 
     WitnessEngine private we;
 
-    ERC20 private btct;
-
-    GeneratorInterface private gen;
+    Token private btct;
 
     TrustedOracleInterface private oracle;
 
@@ -43,13 +40,13 @@ contract Burner is FundManager {
     event ConfirmedByProvider(uint _reqId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
     event ConfirmedByWitness(uint _reqId, address _witness, uint _verifiedTime);
     event Attached(uint _reqId, uint _orderId);
+    event BTCTMinted(uint _reqId, address _submitter, uint _aOfSat);
     event Executed(uint _reqId, address _provider, bytes _secret, uint _aOfSat);
 
-    constructor(address _sv, address _we, address _gen, address _oracle) public { 
+    constructor(address _sv, address _we, address _oracle) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
-        gen = GeneratorInterface(_gen);
-        btct = ERC20(gen.getBTCT());
+        btct = new Token("BTCTtest", "tBTCT", 18);
         oracle = TrustedOracleInterface(_oracle);
     }
 
@@ -132,29 +129,26 @@ contract Burner is FundManager {
         emit ConfirmedByWitness(_reqId, msg.sender, req.verifiedTime);
     }
 
-    function attach(uint _reqId, uint _orderId) public {
+    function mint(uint _reqId) public {
 
         Request storage req = requests[_reqId];
 
-        address provider;
-        uint aOfDebt;
+        require(req.verifiedTime != 0);
 
-        require(!isUsed[_orderId]);
-        
-        (aOfDebt, provider) = gen.getDeptByOrder(_orderId);
-        
-        require(aOfDebt == req.aOfSat);
+        require(msg.sender == req.provider);
 
-        if (provider == req.provider && req.isMinter) {
-            debts[provider] += aOfDebt;
-            gen.confirmByBurner(_orderId);
-            isUsed[_orderId] = true;
-            emit Attached(_reqId, _orderId);
-        }
-        
+        require(req.isMinter);
+
+        debts[req.provider] += req.aOfSat;
+
+        btct.mint(req.provider, req.aOfSat);
+
+        req.isMinter = false;
+
+        emit BTCTMinted(_reqId, req.provider, req.aOfSat);
     }
 
-    function execute(uint _reqId, bytes _secret) public {
+    function burn(uint _reqId, bytes _secret) public {
 
         Request storage req = requests[_reqId]; 
 
@@ -222,15 +216,22 @@ contract Burner is FundManager {
         return debts[_provider];
     }
 
+    function getLockedBalances(address _user) public view returns (uint) {
+        return lockedBalances[_user];
+    }
+
+    function getBTCT() public view returns (address) {
+        return address(btct);
+    }
+
     function burnBTCT(address _user, uint _amountOfSat) internal {
 
         require(balanceOfToken(btct, _user) >= _amountOfSat);
         
         tokenBalances[btct][_user] -= _amountOfSat;   
 
-        btct.transfer(gen, _amountOfSat);
+        btct.burn(_amountOfSat);
 
-        gen.burnBTCT(_amountOfSat);
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {

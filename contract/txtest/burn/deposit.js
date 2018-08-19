@@ -1,6 +1,6 @@
 const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
-const Burner = artifacts.require("./Burner.sol")
+const Swingby = artifacts.require("./Swingby.sol")
 
 const mnemonic = process.env.MNEMONIC_KEY;
 
@@ -17,14 +17,14 @@ console.log(`pubkey: ${pubkey}`)
 
 module.exports = async function (deployer, net, accounts) {
 
-    let burn = await Burner.deployed()
+    let swingby = await Swingby.deployed()
 
-    const deposit = await burn.deposit({
+    const deposit = await swingby.deposit({
         value: web3.toWei(44, 'ether'),
         from: address
     })
 
-    const balance = await burn.balanceOf(address)
+    const balance = await swingby.balanceOf(address)
 
     console.log(balance.toNumber())
 

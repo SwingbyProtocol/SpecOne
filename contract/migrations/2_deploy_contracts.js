@@ -1,11 +1,10 @@
-const Burner = artifacts.require("./Burner.sol");
+const Swingby = artifacts.require("./Swingby.sol");
 const Token = artifacts.require("./Token.sol");
-const Generator = artifacts.require("./Generator.sol")
 const ScriptVerification = artifacts.require("./ScriptVerification.sol")
 const WitnessEngine = artifacts.require("./WitnessEngine.sol")
 
 
-module.exports = function (deployer) {
+module.exports = function (deployer, network) {
 
   let sv
   let we
@@ -21,15 +20,9 @@ module.exports = function (deployer) {
     nt = await Token.deployed()
 
     oracleAddress = "0xe17a43439b750f742c7e2d675d272ee15f8be638"
-    return deployer.deploy(Generator, oracleAddress)
-  }).then(async () => {
-    gen = await Generator.deployed()
+    if (network == "ropsten")
+      oracleAddress = "0xa2bd28f23A78Db41E49db7d7B64b6411123a8B85"
 
-    return deployer.deploy(Burner, sv.address, we.address, gen.address, oracleAddress)
-  }).then(async () => {
-    const burner = await Burner.deployed()
-
-    const setBurner = await gen.setBurner(burner.address)
-
+    return deployer.deploy(Swingby, sv.address, we.address, oracleAddress)
   })
 }

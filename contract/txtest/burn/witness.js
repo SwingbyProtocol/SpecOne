@@ -1,7 +1,6 @@
 const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
-const Generator = artifacts.require("./Generator.sol")
-const Burner = artifacts.require("./Burner.sol")
+const Swingby = artifacts.require("./Swingby.sol")
 //const Oracle = artifacts.require("./Oracle.sol")
 const bitcoin = require('bitcoinjs-lib')
 const rp = require('request-promise')
@@ -47,43 +46,16 @@ const tokenList = [
 
 module.exports = async function (deployer, net, accounts) {
 
-    gen = await Generator.deployed()
-    gen.name = Generator.contractName
 
-    burner = await Burner.deployed()
-    burner.name = Burner.contractName
+
+    burner = await Swingby.deployed()
+    burner.name = Swingby.contractName
 
     // oracle = await Oracle.deployed()
     // oracle.name = Oracle.contractName
 
     panel = false;
 
-    console.log(`Generator: ${gen.address} Burner: ${burner.address}`)
-
-    const genEvent = gen.allEvents({
-        fromBlock: 0,
-        toBlock: 'latest'
-    });
-
-    genEvent.watch(function (error, result) {
-        if (error) return 0
-        //console.log(result.event, result.args);
-        if (result.event == 'Deposited')
-            deposited(gen, result.args)
-        if (result.event == 'OrderSubmitted')
-            orderSubmitted(gen, result.args)
-        if (result.event == "OrderTaked")
-            orderTaked(gen, result.args)
-        if (result.event == "ConfirmedBySubmitter")
-            confirmedBySubmitter(gen, result.args)
-        if (result.event == "Finalized")
-            finalized(gen, result.args)
-        if (result.event == "BTCTMinted")
-            btctMinted(gen, result.args)
-        if (result.event == "Executed")
-            executed(gen, result.args)
-
-    });
 
     const burnerEvent = burner.allEvents({
         fromBlock: 0,
@@ -109,7 +81,8 @@ module.exports = async function (deployer, net, accounts) {
             tokenDeposited(burner, result.args)
         if (result.event == "Executed")
             burnExecuted(burner, result.args)
-
+        if (result.event == "BTCTMinted")
+            btctMinted(burner, result.args)
     })
 
 
@@ -144,10 +117,7 @@ function executed(contract, args) {
 }
 
 
-function btctMinted(contract, args) {
-    log(contract, `BTCTMinted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
-    getDebts(burner, args._submitter)
-}
+
 
 function tokenDeposited(contract, args) {
     log(contract, `TokenDeposited ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
@@ -179,6 +149,14 @@ async function getPrice(contract) {
     log(contract, `ETH price   : ${price.toNumber() /1e18}`)
 }
 
+
+
+async function getBTCT(contract) {
+    const btct = await contract.getBTCT()
+    log(contract, `BTCT address : ${btct}`)
+}
+
+
 async function getDebts(contract, provider) {
     const debts = await contract.getDebts(provider);
     log(contract, `Provider-Debts : ${provider} aOfSat: ${debts.toNumber() /1e18}`)
@@ -198,6 +176,13 @@ function confirmedByProvider(contract, args) {
 
 function confirmedByWitness(contract, args) {
     log(contract, `ConfirmedByWitness ID: ${args._reqId.toNumber()} Witness: ${args._witness} verifiedTime: ${args._verifiedTime.toNumber()}`)
+}
+
+function btctMinted(contract, args) {
+    getBTCT(contract)
+    log(contract, `BTCTMinted ID: ${args._reqId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
+    getDebts(burner, args._submitter)
+    
 }
 
 function attached(contract, args) {
