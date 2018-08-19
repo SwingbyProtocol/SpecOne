@@ -30,6 +30,8 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(submitReq.logs[0].args)
+    process.exit()
+
     // console.log(submitReq.logs)
 
 }

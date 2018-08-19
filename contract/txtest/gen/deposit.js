@@ -23,6 +23,8 @@ module.exports = async function (deployer, net, accounts) {
         value: web3.toWei('24', 'ether'),
         from: address
     })
+    console.log(deposit.tx)
+    process.exit()
 
-    console.log(deposit.logs[0].args._value.toNumber())
+    //console.log(deposit.logs[0].args._value.toNumber())
 }

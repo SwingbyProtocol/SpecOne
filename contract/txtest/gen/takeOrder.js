@@ -33,4 +33,6 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(takeOrder.logs)
+    process.exit()
+
 }

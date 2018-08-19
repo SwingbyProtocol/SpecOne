@@ -32,4 +32,6 @@ module.exports = async function (deployer, net, accounts) {
 
     console.log(send)
     console.log(execute.logs)
+    process.exit()
+
 }

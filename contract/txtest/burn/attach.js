@@ -25,4 +25,6 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(deposit.logs)
+    process.exit()
+
 }

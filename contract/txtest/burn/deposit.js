@@ -29,4 +29,6 @@ module.exports = async function (deployer, net, accounts) {
     console.log(balance.toNumber())
 
     console.log(deposit.logs[0].args._value.toNumber())
+    process.exit()
+
 }

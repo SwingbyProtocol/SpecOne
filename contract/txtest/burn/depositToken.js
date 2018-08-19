@@ -36,4 +36,6 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(depositToken.logs)
+    process.exit()
+
 }

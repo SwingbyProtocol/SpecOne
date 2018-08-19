@@ -29,6 +29,8 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(confirmByProvider.logs)
+    process.exit()
+
     // console.log(submitReq.logs)
 
 }

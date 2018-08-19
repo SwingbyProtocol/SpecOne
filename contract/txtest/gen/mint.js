@@ -30,4 +30,6 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(mint.logs)
+    process.exit()
+
 }

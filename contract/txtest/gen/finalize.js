@@ -32,4 +32,6 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(finalize.logs[0].args._verifiedTime.toNumber())
+    process.exit()
+
 }

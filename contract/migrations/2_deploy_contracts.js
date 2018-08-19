@@ -20,7 +20,7 @@ module.exports = function (deployer) {
   }).then(async () => {
     nt = await Token.deployed()
 
-    oracleAddress = "0xee4f30cc8891ea637cadf08f113ba4658491d4ed"
+    oracleAddress = "0xe17a43439b750f742c7e2d675d272ee15f8be638"
     return deployer.deploy(Generator, oracleAddress)
   }).then(async () => {
     gen = await Generator.deployed()
@@ -30,5 +30,6 @@ module.exports = function (deployer) {
     const burner = await Burner.deployed()
 
     const setBurner = await gen.setBurner(burner.address)
+
   })
 }

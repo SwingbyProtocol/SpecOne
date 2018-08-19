@@ -28,6 +28,8 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(confirmByWitness.logs)
+    process.exit()
+
     // console.log(submitReq.logs)
 
 }
