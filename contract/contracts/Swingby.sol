@@ -23,6 +23,7 @@ contract Swingby is FundManager {
         address provider;
         bool    isMinter;
         uint    verifiedTime;
+        uint    period;
         bool    isOpen;
     }
 
@@ -50,15 +51,20 @@ contract Swingby is FundManager {
         oracle = TrustedOracleInterface(_oracle);
     }
 
-    function submitRequest(uint _aOfSat, uint _aOfWei, bool _isMinter, bytes _pubkey) public {
+    function submitRequest(uint _aOfSat, uint _aOfWei, uint _period, bool _isMinter, bytes _pubkey) public {
 
         uint256 minLockAmount;
+        uint256 period = _period;
 
         if (_isMinter) {
             minLockAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
             
         } else {
             minLockAmount = 1 * 10 ** 18 * (_aOfSat * 10 / getPrice()) / 100;
+        }
+
+        if (_period <= 0) {
+            period = 2 weeks;
         }
 
         require(balanceOf(msg.sender) >= minLockAmount);
@@ -78,6 +84,7 @@ contract Swingby is FundManager {
             provider: 0x0,
             isMinter: _isMinter,
             verifiedTime: 0,
+            period: period,
             isOpen: true
         });
         requests.push(req);
