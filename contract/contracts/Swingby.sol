@@ -9,25 +9,26 @@ import "./TrustedOracleInterface.sol";
 contract Swingby is FundManager {
 
     mapping (address => uint256) private lockedBalances;
+    mapping (address => uint256) private lockedSGBBalances;
     mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
+    uint private multiplexer;
 
-    struct Request {
+    struct Order {
         uint    aOfSat;
         bytes   pubkey;
         uint    lockingAmount;
         bytes20 rsHash;
         bytes32 secretHash;
         bytes32 txId;
-        address submitter;
-        address provider;
-        bool    isMinter;
+        address borrower;
+        address lender;
         uint    verifiedTime;
         uint    period;
         bool    isOpen;
     }
 
-    Request[] private requests;
+    Order[] private orders;
 
     ScriptVerification private sv;
 
@@ -37,78 +38,79 @@ contract Swingby is FundManager {
 
     TrustedOracleInterface private oracle;
 
-    event RequestSubmitted(uint _reqId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
-    event ConfirmedByProvider(uint _reqId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
+    Token private sgb;
+
+    event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
+    event ConfirmedByLender(uint _reqId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
     event ConfirmedByWitness(uint _reqId, address _witness, uint _verifiedTime);
     event Attached(uint _reqId, uint _orderId);
     event BTCTMinted(uint _reqId, address _submitter, uint _aOfSat);
     event Executed(uint _reqId, address _provider, bytes _secret, uint _aOfSat);
 
-    constructor(address _sv, address _we, address _oracle) public { 
+    constructor(address _sv, address _we, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
         btct = new Token("BTCTtest", "tBTCT", 18);
         oracle = TrustedOracleInterface(_oracle);
+        sgb = Token(_sgb);
+        multiplexer = 1 * 10 ** sgb.decimals();
     }
 
-    function submitRequest(uint _aOfSat, uint _aOfWei, uint _period, bool _isMinter, bytes _pubkey) public {
+    function submitOrder(uint _aOfSat, uint _aOfWei, uint _period, bytes _pubkey) public {
 
         uint256 minLockAmount;
         uint256 period = _period;
 
-        if (_isMinter) {
-            minLockAmount = 1 * 10 ** 18 * (_aOfSat * 150 / getPrice()) / 100;
-            
-        } else {
-            minLockAmount = 1 * 10 ** 18 * (_aOfSat * 10 / getPrice()) / 100;
-        }
-
+        minLockAmount = 1 * 10 ** 18 * (_aOfSat * 150 / getPrice()) / 100;
+    
         if (_period <= now) {
             period = 2 weeks;
         }
-
-        require(balanceOf(msg.sender) >= minLockAmount);
 
         require(_aOfWei >= minLockAmount);
 
         lockSecurityDeposit(msg.sender, _aOfWei);
 
-        Request memory req = Request({
+        lockSGBToken(msg.sender, 3000 * multiplexer);
+
+        Order memory order = Order({
             aOfSat: _aOfSat,
             pubkey: _pubkey,
             lockingAmount: _aOfWei,
             rsHash: 0x0,
             secretHash: 0x0,
             txId: 0x0,
-            submitter: msg.sender,
-            provider: 0x0,
-            isMinter: _isMinter,
+            borrower: msg.sender,
+            lender: 0x0,
             verifiedTime: 0,
             period: period,
             isOpen: true
         });
-        requests.push(req);
 
-        emit RequestSubmitted(requests.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _pubkey);
+        orders.push(order);
+
+        emit OrderSubmitted(orders.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _pubkey);
     }
 
-    function confirmByProvider(uint _reqId, bytes32 _txId, bytes _rs) public {
-
-        Request storage req = requests[_reqId];
+    function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _lockAmount) public {
+        
+        Order storage order = orders[_orderId];
 
         bytes20 rsHash;
         bytes32 secretHash;
 
-        require(req.secretHash == 0x0);
+        require(order.secretHash == 0x0);
+
+        require(balanceOfToken(sgb, msg.sender) >= 3000 * multiplexer);
 
         (rsHash, secretHash) = sv.redeemScriptToSecretHash(_rs);
 
-        req.rsHash = rsHash;
-        req.secretHash = secretHash;
-        req.txId = _txId;
-        req.provider = msg.sender;
+        order.rsHash = rsHash;
+        order.secretHash = secretHash;
+        order.txId = _txId;
+        order.lender = msg.sender;
 
-        emit ConfirmedByProvider(_reqId, req.aOfSat, rsHash, secretHash, _txId, _rs);
+        emit ConfirmedByLender(_orderId, order.aOfSat, rsHash, secretHash, _txId, _rs);
 
     }
 
@@ -121,32 +123,30 @@ contract Swingby is FundManager {
      */
     function confirmByWitness(uint _reqId, bytes _rawTx) public {
 
-        Request storage req = requests[_reqId];
+        Order storage order = orders[_reqId];
 
-        require(req.provider != 0x0);
+        require(order.lender != 0x0);
 
-        require(req.verifiedTime == 0);
+        require(order.verifiedTime == 0);
 
         require(we.isWitness(msg.sender));
 
-        require(sv.verifyTx(_rawTx, req.txId, req.rsHash, req.aOfSat, 0));
+        require(sv.verifyTx(_rawTx, order.txId, order.rsHash, order.aOfSat, 0));
 
-        req.verifiedTime = block.timestamp;
+        order.verifiedTime = block.timestamp;
 
-        emit ConfirmedByWitness(_reqId, msg.sender, req.verifiedTime);
+        emit ConfirmedByWitness(_reqId, msg.sender, order.verifiedTime);
     }
 
     function mint(uint _reqId) public {
 
-        Request storage req = requests[_reqId];
+        order storage req = orders[_reqId];
 
         require(req.verifiedTime != 0);
 
-        require(msg.sender == req.provider);
+        require(msg.sender == req.lender);
 
-        require(req.isMinter);
-
-        debts[req.provider] += req.aOfSat;
+        debts[req.lender] += req.aOfSat;
 
         btct.mint(req.provider, req.aOfSat);
 
@@ -239,6 +239,22 @@ contract Swingby is FundManager {
 
         btct.burn(_amountOfSat);
 
+    }
+
+    function lockSGBToken(address _user, uint _amount) internal {
+        require(balanceOfToken(sgb, _user) >= _amount);
+
+        tokenBalances[sgb][_user] -= _amount;
+
+        lockedSGBBalances[_user] += _amount;
+    }
+
+    function unlockSGBToken(address _user, uint _amount) internal {
+        require(lockedSGBBalances[_user] >= _amount);
+
+        tokenBalances[sgb][_user] += _amount;
+
+        lockedSGBBalances[_user] -= _amount;
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {
