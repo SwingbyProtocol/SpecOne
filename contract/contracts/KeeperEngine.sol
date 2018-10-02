@@ -2,35 +2,15 @@ pragma solidity 0.4.24;
 
 
 import "./FundManager.sol";
+import "./TrustedOracleInterface.sol";
+
 
 contract KeeperEngine is FundManager {    
-    mapping(address => bool) public witnesses;
-    mapping(address => mapping(address => uint256)) private tokenLockedBalances;
-    uint public witnessCount;
+    uint public debts;
 
-    struct Vote {
-        uint    mode;
-        uint    count;
-        address user;
-        uint    startTime;
-    }
+    Token public btct;
 
-    Vote[] private votes;
-
-    Token public token;
-
-    modifier onlyWitness() {
-        require(witnesses[msg.sender]);
-        _;
-    }
-
-    event UpdatedWitness(address _user);
-    event RemovedWitness(address _user);
-
-    constructor() public { 
-        witnesses[msg.sender] = true;
-        witnessCount = 1;
-    }
+    event KeeperExecuted(address _keeper);
 
     function setToken(address _token) public {
         require(address(token) == 0x0);

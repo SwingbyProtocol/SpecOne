@@ -3,6 +3,7 @@ pragma solidity 0.4.24;
 import "./ScriptVerification.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
+import "./KeeperEngine.sol";
 import "./TrustedOracleInterface.sol";
 
 
@@ -14,6 +15,7 @@ contract Swingby is FundManager {
 
     mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
+    uint public  debtPool;
     uint private multiplexer;
 
     struct Order {
@@ -54,6 +56,8 @@ contract Swingby is FundManager {
 
     Token private sgb;
 
+    KeeperEngine private ke;
+
     event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfSat, bytes32 _rsh, bytes _pubkey);
     event ConfirmedByLender(uint _orderId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
     event ConfirmedByWitness(uint _orderId, address _witness, uint _vTime);
@@ -61,13 +65,15 @@ contract Swingby is FundManager {
     event MintedBTCT(uint _orderId, address _borrower, uint _aOfSat);
     event BurnedBTCT(uint _orderId, address _borrower, bytes _sS, uint _aOfSat);
 
-    constructor(address _sv, address _we, address _oracle, address _sgb) public { 
+    constructor(address _sv, address _we, address _ke, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
+        ke = KeeperEngine(_ke);
         btct = new Token("BTCTtest", "tBTCT", 18);
         oracle = TrustedOracleInterface(_oracle);
         sgb = Token(_sgb);
         multiplexer = 1 * 10 ** sgb.decimals();
+        debtPool = 0;
     }
 
     function submitOrder(
@@ -245,10 +251,11 @@ contract Swingby is FundManager {
         
         unlockCollateralDeposit(order.borrower, order.aOfWei);
 
-        unlockSecurityDeposit(msg.sender, 3000 * multiplexer);
-
-        tokenBalances[sgb][order.borrower] -= 400;
-        tokenBalances[sgb][order.lender] += 400;
+        unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
+        
+        // send fees to lender
+        tokenBalances[sgb][order.borrower] -= 400 * multiplexer;
+        tokenBalances[sgb][order.lender] += 400 * multiplexer;
 
         uint aOfInterest = (order.period - order.vTime) / 365 days * order.interest;
         uint aOfETH = 1 * 10 ** 18 * (order.aOfSat * 100 / getPrice()) / 100;
@@ -269,14 +276,9 @@ contract Swingby is FundManager {
 
         require(now >= order.period);
             
-        lockedBalances[order.borrower] -= order.aOfWei;
+        liquidate(order);
 
-        ke.addDebt(order.aOfSat);
-
-        ke.transfer(order.aOfWei);
-
-        order.status = Status.liquidated;
-        
+        return true;
     }
 
     function liquidateByPrice(uint _orderId) public returns (bool) {
@@ -285,14 +287,10 @@ contract Swingby is FundManager {
 
         require(order.status == Status.minted);
 
-        require(now >= order.period);
+        uint limit = 1 * 10 ** 18 * (order.aOfSat * 135 / getPrice()) / 100;
 
-        uint limit = 1 * 10 ** 18 * (req.aOfSat * 135 / getPrice()) / 100;
-
-        if (req.lockingAmount < limit) {
-            lockedBalances[req.submitter] = 0;
-            req.isOpen = false;
-            return true;
+        if (order.aOfWei < limit) {
+            liquidate(order);
         }
         return true;
     }
@@ -311,6 +309,21 @@ contract Swingby is FundManager {
 
     function getBTCT() public view returns (address) {
         return address(btct);
+    }
+
+    function liquidate(Order order) internal returns (bool) {
+            
+        unlockCollateralDeposit(order.borrower, order.aOfWei);
+
+        unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
+
+        ethBalances[order.borrower] -= order.aOfWei;
+
+        debtPool += order.aOfSat;
+
+        ke.transfer(order.aOfWei);
+
+        order.status = Status.liquidated;
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {
