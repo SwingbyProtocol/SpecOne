@@ -17,13 +17,14 @@ contract Swingby is FundManager {
     struct Order {
         uint    aOfSat;
         bytes   pubkey;
-        uint    lockingAmount;
+        uint    aOfWei;
         bytes20 rsHash;
-        bytes32 secretHash;
+        bytes32 sHash;
+        bytes32 rHash;
         bytes32 txId;
         address borrower;
         address lender;
-        uint    verifiedTime;
+        uint    vTime;
         uint    period;
         bool    isOpen;
     }
@@ -40,11 +41,11 @@ contract Swingby is FundManager {
 
     Token private sgb;
 
-    event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes _pubkey);
-    event ConfirmedByLender(uint _reqId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
-    event ConfirmedByWitness(uint _reqId, address _witness, uint _verifiedTime);
+    event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfSat, bytes32 _rsh, bytes _pubkey);
+    event ConfirmedByLender(uint _orderId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
+    event ConfirmedByWitness(uint _orderId, address _witness, uint _vTime);
     event Attached(uint _reqId, uint _orderId);
-    event BTCTMinted(uint _reqId, address _submitter, uint _aOfSat);
+    event MintedBTCT(uint _reqId, address _submitter, uint _aOfSat);
     event Executed(uint _reqId, address _provider, bytes _secret, uint _aOfSat);
 
     constructor(address _sv, address _we, address _oracle, address _sgb) public { 
@@ -56,7 +57,7 @@ contract Swingby is FundManager {
         multiplexer = 1 * 10 ** sgb.decimals();
     }
 
-    function submitOrder(uint _aOfSat, uint _aOfWei, uint _period, bytes _pubkey) public {
+    function submitOrder(uint _aOfSat, uint _aOfWei, uint _period, bytes32 _rHash, bytes _pubkey) public {
 
         uint256 minLockAmount;
         uint256 period = _period;
@@ -69,48 +70,49 @@ contract Swingby is FundManager {
 
         require(_aOfWei >= minLockAmount);
 
-        lockSecurityDeposit(msg.sender, _aOfWei);
+        lockCollateralDeposit(msg.sender, _aOfWei);
 
-        lockSGBToken(msg.sender, 3000 * multiplexer);
+        lockSecurityDeposit(msg.sender, 3000 * multiplexer);
 
         Order memory order = Order({
             aOfSat: _aOfSat,
             pubkey: _pubkey,
-            lockingAmount: _aOfWei,
+            aOfWei: _aOfWei,
             rsHash: 0x0,
-            secretHash: 0x0,
+            sHash: 0x0,
+            rHash: _rHash,
             txId: 0x0,
             borrower: msg.sender,
             lender: 0x0,
-            verifiedTime: 0,
+            vTime: 0,
             period: period,
             isOpen: true
         });
 
         orders.push(order);
 
-        emit OrderSubmitted(orders.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _pubkey);
+        emit OrderSubmitted(orders.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _rHash, _pubkey);
     }
 
-    function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _lockAmount) public {
+    function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _aOfToken) public {
         
         Order storage order = orders[_orderId];
 
         bytes20 rsHash;
-        bytes32 secretHash;
+        bytes32 sHash;
 
         require(order.secretHash == 0x0);
 
-        require(balanceOfToken(sgb, msg.sender) >= 3000 * multiplexer);
+        lockSecurityDeposit(msg.sender, 3000 * multiplexer);
 
-        (rsHash, secretHash) = sv.redeemScriptToSecretHash(_rs);
+        (rsHash, sHash) = sv.redeemScriptToSecretHash(_rs);
 
         order.rsHash = rsHash;
-        order.secretHash = secretHash;
+        order.sHash = sHash;
         order.txId = _txId;
         order.lender = msg.sender;
 
-        emit ConfirmedByLender(_orderId, order.aOfSat, rsHash, secretHash, _txId, _rs);
+        emit ConfirmedByLender(_orderId, order.aOfSat, order.rsHash, order.sHash, _txId, _rs);
 
     }
 
@@ -121,65 +123,63 @@ contract Swingby is FundManager {
         uint _amount, 
         uint _fee
      */
-    function confirmByWitness(uint _reqId, bytes _rawTx) public {
+    function confirmByWitness(uint _orderId, bytes _rawTx) public {
 
-        Order storage order = orders[_reqId];
+        Order storage order = orders[_orderId];
 
         require(order.lender != 0x0);
 
-        require(order.verifiedTime == 0);
+        require(order.vTime == 0);
 
         require(we.isWitness(msg.sender));
 
         require(sv.verifyTx(_rawTx, order.txId, order.rsHash, order.aOfSat, 0));
 
-        order.verifiedTime = block.timestamp;
+        order.vTime = block.timestamp;
 
-        emit ConfirmedByWitness(_reqId, msg.sender, order.verifiedTime);
+        emit ConfirmedByWitness(_orderId, msg.sender, order.vTime);
     }
 
-    function mint(uint _reqId) public {
+    function mint(uint _orderId) public {
 
-        order storage req = orders[_reqId];
+        Order storage order = orders[_orderId];
 
-        require(req.verifiedTime != 0);
+        require(order.vTime != 0);
 
-        require(msg.sender == req.lender);
+        require(msg.sender == order.borrower);
 
-        debts[req.lender] += req.aOfSat;
+        debts[order.borrower] += order.aOfSat;
 
-        btct.mint(req.provider, req.aOfSat);
+        btct.mint(order.borrower, order.aOfSat);
 
-        req.isMinter = false;
-
-        emit BTCTMinted(_reqId, req.provider, req.aOfSat);
+        emit MintedBTCT(_orderId, order.borrower, order.aOfSat);
     }
 
-    function burn(uint _reqId, bytes _secret) public {
+    function burn(uint _orderId, bytes _secret) public {
 
-        Request storage req = requests[_reqId]; 
+        Order storage order = orders[_orderId];
 
-        require(req.verifiedTime != 0);
+        require(order.verifiedTime != 0);
 
-        require(req.secretHash == sha256(_secret));
+        require(order.secretHash == sha256(_secret));
 
-        require(balanceOfToken(btct, req.submitter) >= req.aOfSat);
+        require(balanceOfToken(btct, order.submitter) >= order.aOfSat);
 
-        burnBTCT(req.submitter, req.aOfSat);
+        burnBTCT(order.submitter, order.aOfSat);
 
-        if (debts[req.provider] >= req.aOfSat) {
-            debts[req.provider] -= req.aOfSat;
-        } else if (debts[req.provider] < req.aOfSat) {
-            debts[req.provider] = 0;
+        if (debts[order.provider] >= order.aOfSat) {
+            debts[order.provider] -= order.aOfSat;
+        } else if (debts[order.provider] < order.aOfSat) {
+            debts[order.provider] = 0;
         }
-        unlockSecurityDeposit(req.submitter, req.lockingAmount);
+        unlockSecurityDeposit(order.submitter, order.lockingAmount);
 
-        emit Executed(_reqId, req.provider, _secret, req.aOfSat);
+        emit Executed(_orderId, order.provider, _secret, order.aOfSat);
     }
 
-    function liquidateByTime(uint _reqId) public returns (bool) {
+    function liquidateByTime(uint _orderId) public returns (bool) {
 
-        Request storage req = requests[_reqId];
+        Order storage order = orders[_orderId];
 
         require(req.verifiedTime != 0);
 
@@ -241,7 +241,8 @@ contract Swingby is FundManager {
 
     }
 
-    function lockSGBToken(address _user, uint _amount) internal {
+    function lockSecurityDeposit(address _user, uint _amount) internal {
+        
         require(balanceOfToken(sgb, _user) >= _amount);
 
         tokenBalances[sgb][_user] -= _amount;
@@ -249,7 +250,8 @@ contract Swingby is FundManager {
         lockedSGBBalances[_user] += _amount;
     }
 
-    function unlockSGBToken(address _user, uint _amount) internal {
+    function unlockSecurityDeposit(address _user, uint _amount) internal {
+        
         require(lockedSGBBalances[_user] >= _amount);
 
         tokenBalances[sgb][_user] += _amount;
@@ -257,7 +259,7 @@ contract Swingby is FundManager {
         lockedSGBBalances[_user] -= _amount;
     }
 
-    function lockSecurityDeposit(address _user, uint _amount) internal {
+    function lockCollateralDeposit(address _user, uint _amount) internal {
 
         require(balanceOf(_user) >= _amount);
 
@@ -267,7 +269,7 @@ contract Swingby is FundManager {
 
     }
 
-    function unlockSecurityDeposit(address _user, uint _amount) internal {
+    function unlockCollateralDeposit(address _user, uint _amount) internal {
         
         require(lockedBalances[_user] >= _amount);
 
