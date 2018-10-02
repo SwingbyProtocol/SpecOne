@@ -3,7 +3,6 @@ pragma solidity 0.4.24;
 import "./ScriptVerification.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
-import "./KeeperEngine.sol";
 import "./TrustedOracleInterface.sol";
 
 
@@ -31,7 +30,7 @@ contract Swingby is FundManager {
         uint    interest;
         uint    sTime;
         uint    period;
-        uint    status; // emum
+        Status  status; // emum
     }
 
     enum Status {
@@ -56,19 +55,16 @@ contract Swingby is FundManager {
 
     Token private sgb;
 
-    KeeperEngine private ke;
-
-    event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfSat, bytes32 _rsh, bytes _pubkey);
+    event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes32 _rsh, bytes _pubkey);
     event ConfirmedByLender(uint _orderId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
-    event ConfirmedByWitness(uint _orderId, address _witness, uint _vTime);
+    event ConfirmedByWitness(uint _orderId, address _witness);
     event Cancelled(uint _orderId, address _borrower, bytes _sR, uint _aOfSat);
     event MintedBTCT(uint _orderId, address _borrower, uint _aOfSat);
     event BurnedBTCT(uint _orderId, address _borrower, bytes _sS, uint _aOfSat);
 
-    constructor(address _sv, address _we, address _ke, address _oracle, address _sgb) public { 
+    constructor(address _sv, address _we, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
-        ke = KeeperEngine(_ke);
         btct = new Token("BTCTtest", "tBTCT", 18);
         oracle = TrustedOracleInterface(_oracle);
         sgb = Token(_sgb);
@@ -174,7 +170,7 @@ contract Swingby is FundManager {
 
         order.status = Status.verified;
 
-        emit ConfirmedByWitness(_orderId, msg.sender, order.vTime);
+        emit ConfirmedByWitness(_orderId, msg.sender);
     }
 
     function cancelOrder(uint _orderId, bytes _sR) public {
@@ -208,6 +204,8 @@ contract Swingby is FundManager {
         debts[order.borrower] += order.aOfSat;
 
         btct.mint(order.borrower, order.aOfSat);
+
+        order.sTime = now;
 
         order.status = Status.minted;
 
@@ -300,7 +298,11 @@ contract Swingby is FundManager {
         
         require(balanceOfToken(btct, msg.sender) >= _aOfSat);
 
-        tokenBalances[btct][msg.sender] -= _aOfSat;    
+        tokenBalances[btct][msg.sender] -= _aOfSat;   
+
+        debtPool -= _aOfSat; 
+
+        btct.burn(_aOfSat);
 
         uint amount = 1 * 10 ** 18 * (_aOfSat * 103 / getPrice()) / 100;
 
