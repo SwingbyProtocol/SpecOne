@@ -57,13 +57,13 @@ contract Swingby is FundManager {
         uint256 period = _period;
 
         if (_isMinter) {
-            minLockAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
+            minLockAmount = 1 * 10 ** 18 * (_aOfSat * 150 / getPrice()) / 100;
             
         } else {
             minLockAmount = 1 * 10 ** 18 * (_aOfSat * 10 / getPrice()) / 100;
         }
 
-        if (_period <= 0) {
+        if (_period <= now) {
             period = 2 weeks;
         }
 
@@ -205,7 +205,7 @@ contract Swingby is FundManager {
 
         require(req.verifiedTime != 0);
 
-        uint limit = 1 * 10 ** 18 * (req.aOfSat * 120 / getPrice()) / 100;
+        uint limit = 1 * 10 ** 18 * (req.aOfSat * 135 / getPrice()) / 100;
 
         if (req.lockingAmount < limit) {
             lockedBalances[req.submitter] = 0;
