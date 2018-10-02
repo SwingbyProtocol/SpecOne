@@ -294,6 +294,18 @@ contract Swingby is FundManager {
         }
         return true;
     }
+    
+    // keeper execute
+    function exchange(uint _aOfSat) {
+        
+        require(balanceOfToken(btct, msg.sender) >= _aOfSat);
+
+        tokenBalances[btct][msg.sender] -= _aOfSat;    
+
+        uint amount = 1 * 10 ** 18 * (_aOfSat * 103 / getPrice()) / 100;
+
+        msg.sender.transfer(amount);
+    }
 
     function getPrice() public view returns (uint) {
         return oracle.getPrice();
@@ -320,8 +332,6 @@ contract Swingby is FundManager {
         ethBalances[order.borrower] -= order.aOfWei;
 
         debtPool += order.aOfSat;
-
-        ke.transfer(order.aOfWei);
 
         order.status = Status.liquidated;
     }
