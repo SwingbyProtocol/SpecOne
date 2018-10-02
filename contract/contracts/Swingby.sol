@@ -26,7 +26,16 @@ contract Swingby is FundManager {
         address lender;
         uint    vTime;
         uint    period;
-        bool    isOpen;
+        uint    status; // emum
+    }
+
+    enum Status {
+        opened,
+        minted,
+        canceled,
+        burning,
+        burned,
+        closed
     }
 
     Order[] private orders;
@@ -62,7 +71,7 @@ contract Swingby is FundManager {
         uint256 minLockAmount;
         uint256 period = _period;
 
-        minLockAmount = 1 * 10 ** 18 * (_aOfSat * 150 / getPrice()) / 100;
+        minLockAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
     
         if (_period <= now) {
             period = 2 weeks;
@@ -86,7 +95,7 @@ contract Swingby is FundManager {
             lender: 0x0,
             vTime: 0,
             period: period,
-            isOpen: true
+            status: Status.opened
         });
 
         orders.push(order);
@@ -101,7 +110,9 @@ contract Swingby is FundManager {
         bytes20 rsHash;
         bytes32 sHash;
 
-        require(order.secretHash == 0x0);
+        require(order.status == Status.opened);
+
+        require(order.sHash == 0x0);
 
         lockSecurityDeposit(msg.sender, 3000 * multiplexer);
 
@@ -140,6 +151,26 @@ contract Swingby is FundManager {
         emit ConfirmedByWitness(_orderId, msg.sender, order.vTime);
     }
 
+    function cancelOrder(uint _orderId, bytes _sR) public {
+        
+        Order storage order = orders[_orderId];
+
+        require(order.status == Status.opened);
+
+        require(order.vTime != 0);
+
+        require(order.borrower == msg.sender);
+
+        require(sha256(_sR) == order.rHash);
+
+        unlockCollateralDeposit(order.borrower, order.aOfWei);
+
+        unlockSecurityDeposit(msg.sender, 3000 * multiplexer);
+
+        order.status = Status.canceled;
+
+    }
+
     function mint(uint _orderId) public {
 
         Order storage order = orders[_orderId];
@@ -152,29 +183,35 @@ contract Swingby is FundManager {
 
         btct.mint(order.borrower, order.aOfSat);
 
+        order.status = Status.minted;
+
         emit MintedBTCT(_orderId, order.borrower, order.aOfSat);
     }
 
-    function burn(uint _orderId, bytes _secret) public {
+    function submitBurn(uint _orderId)
+
+    function burn(uint _orderId, bytes _sS) public {
 
         Order storage order = orders[_orderId];
 
-        require(order.verifiedTime != 0);
+        require(order.status == Status.minted);
 
-        require(order.secretHash == sha256(_secret));
+        require(order.sHash == sha256(_sS));
 
-        require(balanceOfToken(btct, order.submitter) >= order.aOfSat);
+        require(balanceOfToken(btct, order.borrower) >= order.aOfSat);
 
-        burnBTCT(order.submitter, order.aOfSat);
+        burnBTCT(order.borrower, order.aOfSat);
 
-        if (debts[order.provider] >= order.aOfSat) {
-            debts[order.provider] -= order.aOfSat;
-        } else if (debts[order.provider] < order.aOfSat) {
-            debts[order.provider] = 0;
+        if (debts[order.borrower] >= order.aOfSat) {
+            debts[order.borrower] -= order.aOfSat;
+        } else if (debts[order.borrower] < order.aOfSat) {
+            debts[order.borrower] = 0;
         }
-        unlockSecurityDeposit(order.submitter, order.lockingAmount);
+        unlockSecurityDeposit(order.borrower, order.aOfWei);
 
-        emit Executed(_orderId, order.provider, _secret, order.aOfSat);
+        debts[order.borrower] -= order.aOfSat;
+
+        emit Executed(_orderId, order.aOfSat, _secret, order.aOfSat);
     }
 
     function liquidateByTime(uint _orderId) public returns (bool) {
