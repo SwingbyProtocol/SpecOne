@@ -73,12 +73,32 @@ contract Swingby is FundManager {
         bytes32 _txId, 
         bytes _rs
     );
-    
-    event ConfirmedByWitness(uint _orderId, address _witness);
-    event Cancelled(uint _orderId, address _borrower, bytes _sR, uint _aOfSat);
-    event MintedBTCT(uint _orderId, address _borrower, uint _aOfSat);
-    event BurnedBTCT(uint _orderId, address _borrower, bytes _sS, uint _aOfSat);
 
+    event ConfirmedByWitness(
+        uint _orderId, 
+        address _witness
+    );
+
+    event Cancelled(
+        uint _orderId, 
+        address _borrower, 
+        bytes _sR, 
+        uint _aOfSat
+    );
+
+    event MintedBTCT(
+        uint _orderId, 
+        address _borrower, 
+        uint _aOfSat
+    );
+
+    event BurnedBTCT(
+        uint _orderId, 
+        address _borrower, 
+        bytes _sS, 
+        uint _aOfSat
+    );
+    
     constructor(address _sv, address _we, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
