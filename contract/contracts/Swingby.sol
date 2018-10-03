@@ -55,8 +55,25 @@ contract Swingby is FundManager {
 
     Token private sgb;
 
-    event OrderSubmitted(uint _orderId, address _user, uint _mLockAmount, uint _aOfWei, uint _aOfSat, bytes32 _rsh, bytes _pubkey);
-    event ConfirmedByLender(uint _orderId, uint _aOfSat, bytes20 _rsHash, bytes32 _sHash, bytes32 _txId, bytes _rs);
+    event OrderSubmitted(
+        uint _orderId, 
+        address _user, 
+        uint _mLockAmount, 
+        uint _aOfWei, 
+        uint _aOfSat, 
+        bytes32 _rsh, 
+        bytes _pubkey
+    );
+
+    event ConfirmedByLender(
+        uint _orderId, 
+        uint _aOfSat, 
+        bytes20 _rsHash, 
+        bytes32 _sHash, 
+        bytes32 _txId, 
+        bytes _rs
+    );
+    
     event ConfirmedByWitness(uint _orderId, address _witness);
     event Cancelled(uint _orderId, address _borrower, bytes _sR, uint _aOfSat);
     event MintedBTCT(uint _orderId, address _borrower, uint _aOfSat);
@@ -257,6 +274,7 @@ contract Swingby is FundManager {
         uint aOfInterest = (order.period - order.sTime) / 365 days * order.interest;
         uint aOfETH = 1 * 10 ** 18 * (order.aOfSat * 100 / getPrice()) / 100;
 
+        // send value and interest to lender
         ethBalances[order.borrower] -= (aOfETH + aOfInterest);
         ethBalances[order.lender] += (aOfETH + aOfInterest);
 
