@@ -273,7 +273,7 @@ contract Swingby is FundManager {
 
         require(now >= order.period);
             
-        liquidate(order);
+        liquidate(order, _orderId);
 
         return true;
     }
@@ -287,7 +287,7 @@ contract Swingby is FundManager {
         uint limit = 1 * 10 ** 18 * (order.aOfSat * 135 / getPrice()) / 100;
 
         if (order.aOfWei < limit) {
-            liquidate(order);
+            liquidate(order, _orderId);
         }
         return true;
     }
@@ -347,13 +347,13 @@ contract Swingby is FundManager {
 
         ethBalances[_order.borrower] -= _order.aOfWei;
 
-        uint aOfRefundLock = 1 * 10 ** 18 * (order.aOfSat * 25 / getPrice()) / 100;
+        uint aOfRefundLock = 1 * 10 ** 18 * (_order.aOfSat * 25 / getPrice()) / 100;
 
         lockedRefundBalances[_orderId] += aOfRefundLock;
 
         debtPool += _order.aOfSat;
 
-        order.status = Status.liquidated;
+        _order.status = Status.liquidated;
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {
