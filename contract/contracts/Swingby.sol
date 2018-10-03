@@ -11,8 +11,7 @@ contract Swingby is FundManager {
     mapping (address => uint256) private lockedBalances;
     mapping (address => uint256) private lockedSGBBalances;
     mapping (address => uint256) private lockedBTCTBalances;
-    mapping (address => uint256) private lockedRefundBalances;
-
+    mapping (uint => uint256) private lockedRefundBalances;
     mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
     uint public  debtPool;
@@ -309,6 +308,21 @@ contract Swingby is FundManager {
         msg.sender.transfer(amount);
     }
 
+    function purge(uint _orderId, bytes _sR) public {
+
+        Order storage order = orders[_orderId];
+
+        require(order.status == order.liquidated);
+        
+        require(sha256(_sR) == order.rHash);
+
+        ethBalances[order.borrower] += lockedRefundBalances[_orderId];
+
+        lockedRefundBalances[_orderId] = 0;
+
+        order.status = order.closed;
+    }
+
     function getPrice() public view returns (uint) {
         return oracle.getPrice();
     }
@@ -325,19 +339,19 @@ contract Swingby is FundManager {
         return address(btct);
     }
 
-    function liquidate(Order order) internal returns (bool) {
+    function liquidate(Order _order, uint _orderId) internal returns (bool) {
             
-        unlockCollateralDeposit(order.borrower, order.aOfWei);
+        unlockCollateralDeposit(_order.borrower, _order.aOfWei);
 
-        unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
+        unlockSecurityDeposit(_order.borrower, 3000 * multiplexer);
 
-        ethBalances[order.borrower] -= order.aOfWei;
+        ethBalances[_order.borrower] -= _order.aOfWei;
 
         uint aOfRefundLock = 1 * 10 ** 18 * (order.aOfSat * 25 / getPrice()) / 100;
 
-        lockedRefundBalances[order.borrower] += aOfRefundLock;
+        lockedRefundBalances[_orderId] += aOfRefundLock;
 
-        debtPool += order.aOfSat;
+        debtPool += _order.aOfSat;
 
         order.status = Status.liquidated;
     }
