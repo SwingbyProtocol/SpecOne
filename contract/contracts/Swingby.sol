@@ -11,6 +11,7 @@ contract Swingby is FundManager {
     mapping (address => uint256) private lockedBalances;
     mapping (address => uint256) private lockedSGBBalances;
     mapping (address => uint256) private lockedBTCTBalances;
+    mapping (address => uint256) private lockedRefundBalances;
 
     mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
@@ -68,7 +69,7 @@ contract Swingby is FundManager {
         btct = new Token("BTCTtest", "tBTCT", 18);
         oracle = TrustedOracleInterface(_oracle);
         sgb = Token(_sgb);
-        multiplexer = 1 * 10 ** sgb.decimals();
+        multiplexer = 1 * 10 ** uint256(sgb.decimals());
         debtPool = 0;
     }
 
@@ -246,7 +247,6 @@ contract Swingby is FundManager {
 
         btct.burn(order.aOfSat);
 
-        
         unlockCollateralDeposit(order.borrower, order.aOfWei);
 
         unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
@@ -255,11 +255,11 @@ contract Swingby is FundManager {
         tokenBalances[sgb][order.borrower] -= 400 * multiplexer;
         tokenBalances[sgb][order.lender] += 400 * multiplexer;
 
-        uint aOfInterest = (order.period - order.vTime) / 365 days * order.interest;
+        uint aOfInterest = (order.period - order.sTime) / 365 days * order.interest;
         uint aOfETH = 1 * 10 ** 18 * (order.aOfSat * 100 / getPrice()) / 100;
 
-        ethBalances[order.borrower] -= aOfETH;
-        ethBalances[order.lender] += aOfETH;
+        ethBalances[order.borrower] -= (aOfETH + aOfInterest);
+        ethBalances[order.lender] += (aOfETH + aOfInterest);
 
         order.status = Status.closed;
 
@@ -294,7 +294,7 @@ contract Swingby is FundManager {
     }
     
     // keeper execute
-    function exchange(uint _aOfSat) {
+    function exchange(uint _aOfSat) public {
         
         require(balanceOfToken(btct, msg.sender) >= _aOfSat);
 
@@ -332,6 +332,10 @@ contract Swingby is FundManager {
         unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
 
         ethBalances[order.borrower] -= order.aOfWei;
+
+        uint aOfRefundLock = 1 * 10 ** 18 * (order.aOfSat * 25 / getPrice()) / 100;
+
+        lockedRefundBalances[order.borrower] += aOfRefundLock;
 
         debtPool += order.aOfSat;
 
