@@ -312,7 +312,7 @@ contract Swingby is FundManager {
 
         Order storage order = orders[_orderId];
 
-        require(order.status == order.liquidated);
+        require(order.status == Status.liquidated);
         
         require(sha256(_sR) == order.rHash);
 
@@ -320,7 +320,7 @@ contract Swingby is FundManager {
 
         lockedRefundBalances[_orderId] = 0;
 
-        order.status = order.closed;
+        order.status = Status.closed;
     }
 
     function getPrice() public view returns (uint) {

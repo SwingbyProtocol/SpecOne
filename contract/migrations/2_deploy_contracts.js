@@ -8,7 +8,7 @@ module.exports = function (deployer, network) {
 
   let sv
   let we
-  let nt
+  let sgb
   let gen
   let oracleAddress
 
@@ -17,12 +17,12 @@ module.exports = function (deployer, network) {
     we = await WitnessEngine.deployed()
     return deployer.deploy(Token, '232ss', 'STG', 18)
   }).then(async () => {
-    nt = await Token.deployed()
+    sgb = await Token.deployed()
 
     oracleAddress = "0xe17a43439b750f742c7e2d675d272ee15f8be638"
     if (network == "ropsten")
       oracleAddress = "0xa2bd28f23A78Db41E49db7d7B64b6411123a8B85"
 
-    return deployer.deploy(Swingby, sv.address, we.address, oracleAddress)
+    return deployer.deploy(Swingby, sv.address, we.address, oracleAddress, sgb.address)
   })
 }

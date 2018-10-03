@@ -4,7 +4,7 @@ const Token = artifacts.require("./Token.sol")
 contract('FundManager', function (accounts) {
   it("should put 100 ether in to the contract", async function () {
 
-    token = await Token.new("SwingbyToken", "NT", 18)
+    token = await Token.new("SwingbyToken", "SGB", 18)
     fm = await FundManager.new()
 
     const mint = await token.mint(50000 * 1e18)

@@ -4,6 +4,7 @@ import "./Token.sol";
 
 
 contract FundManager {
+    using SafeMath for uint256;
 
     mapping(address => uint256) public ethBalances;
 
@@ -26,7 +27,7 @@ contract FundManager {
 
         token.transferFrom(msg.sender, this, _value);   
 
-        tokenBalances[_token][msg.sender] += _value;    
+        tokenBalances[_token][msg.sender] = tokenBalances[_token][msg.sender].add(_value);    
 
         emit TokenDeposited(_token, msg.sender, _value);
     }
@@ -46,7 +47,7 @@ contract FundManager {
 
     function deposit() public payable {
 
-        ethBalances[msg.sender] += msg.value;
+        ethBalances[msg.sender] = ethBalances[msg.sender].add(msg.value);
 
         emit Deposited(msg.sender, msg.value);
     }
