@@ -211,12 +211,14 @@ contract Swingby is FundManager, AddressManager {
 
     function cancelOrder(uint _orderId, bytes _sR) public {
         
-        require(order.borrower == msg.sender);
-
         Order storage order = orders[_orderId];
+
+        require(order.borrower == msg.sender);
 
         if (order.status == Status.verified) {
             require(sha256(_sR) == order.rHash);
+        } else {
+            require(order.status == Status.opened);
         }
 
         unlockCollateralDeposit(order.borrower, order.aOfWei);
@@ -233,9 +235,9 @@ contract Swingby is FundManager, AddressManager {
 
     function mint(uint _orderId) public {
 
-        require(msg.sender == order.borrower);
-
         Order storage order = orders[_orderId];
+
+        require(msg.sender == order.borrower);
 
         require(order.status == Status.verified);
 
