@@ -5,7 +5,7 @@ import "./BTCLib.sol";
 
 contract ScriptVerification {
 
-    event Verified(bytes32 _txId, uint _amount);
+    event Verified(bytes32 txId, uint amount);
     
     function verifyTx(
         bytes _rawTx, 

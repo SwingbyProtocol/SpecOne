@@ -10,11 +10,11 @@ contract FundManager {
 
     mapping(address => mapping(address => uint256)) public tokenBalances;
 
-    event TokenDeposited(address _token, address _from, uint256 _value);
-    event TokenWithdrew(address _token, address _to, uint256 _value);
+    event TokenDeposited(address token, address from, uint256 value);
+    event TokenWithdrew(address token, address to, uint256 value);
 
-    event Deposited(address _from, uint256 _value);
-    event Withdrew(address _to, uint256 _value);
+    event Deposited(address from, uint256 value);
+    event Withdrew(address to, uint256 value);
 
     function () public payable {
         if (msg.value > 0)
