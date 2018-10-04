@@ -69,8 +69,8 @@ module.exports = async function (deployer, net, accounts) {
             addedNewPrice(result.args)
         if (result.event == 'Deposited')
             deposited(burner, result.args)
-        if (result.event == 'RequestSubmitted')
-            requestSubmitted(burner, result.args)
+        if (result.event == 'OrderSubmitted')
+            orderSubmitted(burner, result.args)
         if (result.event == 'ConfirmedByProvider')
             confirmedByProvider(burner, result.args)
         if (result.event == "ConfirmedByWtitness")
@@ -120,7 +120,7 @@ function executed(contract, args) {
 
 
 function tokenDeposited(contract, args) {
-    log(contract, `TokenDeposited ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
+    log(contract, `TokenDeposited token=${args._token} ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
 }
 
 

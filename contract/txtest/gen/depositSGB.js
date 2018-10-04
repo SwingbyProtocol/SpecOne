@@ -25,9 +25,9 @@ module.exports = async function (deployer, net, accounts) {
     const tokenBlance = await token.balanceOf(address)
     console.log(tokenBlance.toNumber())
 
-    const approve = await token.approve(swingby.address, web3.toWei(2000, 'ether'))
+    const approve = await token.approve(swingby.address, web3.toWei(6000, 'ether'))
 
-    const depositToken = await swingby.depositToken(token.address, web3.toWei(2000, 'ether'), {
+    const depositToken = await swingby.depositToken(token.address, web3.toWei(6000, 'ether'), {
         value: 0,
         from: address
     })

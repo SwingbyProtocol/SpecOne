@@ -86,13 +86,13 @@ contract Swingby is FundManager {
         uint _aOfSat
     );
 
-    event MintedBTCT(
+    event BTCTMinted(
         uint _orderId, 
         address _borrower, 
         uint _aOfSat
     );
 
-    event BurnedBTCT(
+    event BTCTBurned(
         uint _orderId, 
         address _borrower, 
         bytes _sS, 
@@ -243,7 +243,7 @@ contract Swingby is FundManager {
 
         order.status = Status.minted;
 
-        emit MintedBTCT(_orderId, order.borrower, order.aOfSat);
+        emit BTCTMinted(_orderId, order.borrower, order.aOfSat);
     }
 
     function submitBurn(uint _orderId) public {
@@ -297,7 +297,7 @@ contract Swingby is FundManager {
 
         order.status = Status.closed;
 
-        emit BurnedBTCT(_orderId, order.borrower, _sS, order.aOfSat);
+        emit BTCTBurned(_orderId, order.borrower, _sS, order.aOfSat);
     }
 
     function liquidateByTime(uint _orderId) public returns (bool) {
