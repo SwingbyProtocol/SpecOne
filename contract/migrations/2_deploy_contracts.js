@@ -4,7 +4,7 @@ const ScriptVerification = artifacts.require("./ScriptVerification.sol")
 const WitnessEngine = artifacts.require("./WitnessEngine.sol")
 
 
-module.exports = function (deployer, network) {
+module.exports = function (deployer, network, accounts) {
 
   let sv
   let we
@@ -15,9 +15,10 @@ module.exports = function (deployer, network) {
   deployer.deploy(WitnessEngine).then(async () => {
     sv = await ScriptVerification.deployed()
     we = await WitnessEngine.deployed()
-    return deployer.deploy(Token, '232ss', 'STG', 18)
+    return deployer.deploy(Token, 'Swingby Token', 'SGB', 18)
   }).then(async () => {
     sgb = await Token.deployed()
+    allocate = await sgb.mint(accounts[0], 20000 * 10 ** 18)
 
     oracleAddress = "0xe17a43439b750f742c7e2d675d272ee15f8be638"
     if (network == "ropsten")
