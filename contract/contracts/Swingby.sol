@@ -121,18 +121,15 @@ contract Swingby is FundManager {
     {
 
         uint minLockAmount;
-        uint period = _period;
-        uint interest = _interest;
 
         minLockAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
     
-        if (_period <= now) {
-            period = 2 weeks;
-        }
-        if (_interest <= 0) {
-            interest = 1000; // 10% anual year
-        }
+        require(_period >= now);
 
+        require(_interest >= 0);
+
+        require(_interest <= 5000); // maximum 50% anual year
+    
         require(_aOfWei >= minLockAmount);
 
         lockCollateralDeposit(msg.sender, _aOfWei);
@@ -150,8 +147,8 @@ contract Swingby is FundManager {
             borrower: msg.sender,
             lender: 0x0,
             sTime: 0,
-            interest: interest,
-            period: period,
+            interest: _interest,
+            period: _period,
             status: Status.opened
         });
 
@@ -362,7 +359,9 @@ contract Swingby is FundManager {
     }
 
     function getPrice() public view returns (uint) {
-        return oracle.getPrice();
+        // return oracle.getPrice();
+        // 34197279102384291
+        return 34197279102384291;
     }
 
     function getDebts(address _provider) public view returns (uint) {
@@ -375,6 +374,10 @@ contract Swingby is FundManager {
 
     function getBTCT() public view returns (address) {
         return address(btct);
+    }
+
+    function getSGB() public view returns (address) {
+        return address(sgb);
     }
 
     function liquidate(Order _order, uint _orderId) internal returns (bool) {
