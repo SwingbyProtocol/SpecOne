@@ -224,13 +224,13 @@ let checkHTLC = function (args, isTestnet) {
         console.log(isVerified)
         if (isVerified) {
             try {
-                log(burner, `Worker Submit: RequestID: ${args.reqId.toNumber()} hex: ${'0x' + data.hex}`)
-                const confirm = await burner.confirmByWitness(args.reqId.toNumber(), '0x' + data.hex, {
+                log(burner, `Worker Submit: OrderID: ${args.orderId.toNumber()} hex: ${'0x' + data.hex}`)
+                const confirm = await burner.confirmByWitness(args.orderId.toNumber(), '0x' + data.hex, {
                     gas: 120000
                 })
-                log(burner, `Worker Submitted: RequestID: ${args.reqId.toNumber()} ${confirm.tx}`)
+                log(burner, `Worker Submitted: OrderID: ${args.orderId.toNumber()} ${confirm.tx}`)
             } catch (e) {
-                log(burner, `Worker Error: RequestID: ${args.reqId.toNumber()} VM Exception while processing transaction: revert`)
+                log(burner, `Worker Error: OrderID: ${args.orderId.toNumber()} VM Exception while processing transaction: revert`)
             }
         }
     }).catch((err) => {

@@ -124,6 +124,7 @@ library BTCLib {
             return (getBytesLE(_txBytes, pos, 64), pos + 8);
         }
     }
+    
     // convert little endian bytes to uint
     function getBytesLE(bytes data, uint pos, uint bits) public pure returns (uint) {
         if (bits == 8) {
