@@ -1,26 +1,26 @@
 pragma solidity 0.4.24;
 
 import "./ScriptVerification.sol";
+import "./AddressManager.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
 import "./TrustedOracleInterface.sol";
 
 
-contract Swingby is FundManager {
+contract Swingby is FundManager, AddressManager {
 
     mapping (address => uint256) private lockedBalances;
     mapping (address => uint256) private lockedSGBBalances;
     mapping (address => uint256) private lockedBTCTBalances;
     mapping (uint => uint256) private lockedRefundBalances;
-    mapping (uint => bool) private isUsed;
     mapping (address => uint) private debts;
     uint public  debtPool;
     uint private multiplexer;
 
     struct Order {
         uint    aOfSat;
-        bytes   pubkey;
         uint    aOfWei;
+        uint    aOfSGB;
         bytes20 rsHash;
         bytes32 sHash;  // send
         bytes32 rHash;  // refund
@@ -56,47 +56,47 @@ contract Swingby is FundManager {
     Token private sgb;
 
     event OrderSubmitted(
-        uint _orderId, 
-        address _user, 
-        uint _mLockAmount, 
-        uint _aOfWei, 
-        uint _aOfSat, 
-        bytes32 _rsh, 
-        bytes _pubkey
+        uint    orderId, 
+        address user, 
+        uint    mLockAmount, 
+        uint    aOfWei, 
+        uint    aOfSat, 
+        bytes32 rsh, 
+        bytes   pubkey
     );
 
     event ConfirmedByLender(
-        uint _orderId, 
-        uint _aOfSat, 
-        bytes20 _rsHash, 
-        bytes32 _sHash, 
-        bytes32 _txId, 
-        bytes _rs
+        uint    orderId, 
+        uint    aOfSat, 
+        bytes20 rsHash, 
+        bytes32 sHash, 
+        bytes32 txId, 
+        bytes   rs
     );
 
     event ConfirmedByWitness(
-        uint _orderId, 
-        address _witness
+        uint    orderId, 
+        address witness
     );
 
     event Cancelled(
-        uint _orderId, 
-        address _borrower, 
-        bytes _sR, 
-        uint _aOfSat
+        uint    orderId, 
+        address borrower, 
+        bytes   sR, 
+        uint    aOfSat
     );
 
     event BTCTMinted(
-        uint _orderId, 
-        address _borrower, 
-        uint _aOfSat
+        uint    orderId, 
+        address borrower, 
+        uint    aOfSat
     );
 
     event BTCTBurned(
-        uint _orderId, 
-        address _borrower, 
-        bytes _sS, 
-        uint _aOfSat
+        uint    orderId, 
+        address borrower, 
+        bytes   sS, 
+        uint    aOfSat
     );
     
     constructor(address _sv, address _we, address _oracle, address _sgb) public { 
@@ -117,7 +117,7 @@ contract Swingby is FundManager {
         bytes32 _rHash, 
         bytes _pubkey
     ) 
-    public 
+        public 
     {
 
         uint minLockAmount;
@@ -132,14 +132,16 @@ contract Swingby is FundManager {
     
         require(_aOfWei >= minLockAmount);
 
+        require(checkUserPubkey(msg.sender, _pubkey));
+
         lockCollateralDeposit(msg.sender, _aOfWei);
 
         lockSecurityDeposit(msg.sender, 3000 * multiplexer);
 
         Order memory order = Order({
             aOfSat: _aOfSat,
-            pubkey: _pubkey,
             aOfWei: _aOfWei,
+            aOfSGB: 0,
             rsHash: 0x0,
             sHash: 0x0,
             rHash: _rHash,
@@ -157,7 +159,7 @@ contract Swingby is FundManager {
         emit OrderSubmitted(orders.length - 1, msg.sender, minLockAmount, _aOfWei, _aOfSat, _rHash, _pubkey);
     }
 
-    function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _aOfToken) public {
+    function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _aOfSGB) public {
         
         Order storage order = orders[_orderId];
 
@@ -168,12 +170,12 @@ contract Swingby is FundManager {
 
         require(order.sHash == 0x0);
 
-        require(_aOfToken >= 3000 * multiplexer);   // security deposit
+        require(_aOfSGB >= 3000 * multiplexer);   // minimum security deposit
 
-        lockSecurityDeposit(msg.sender, _aOfToken);  
+        lockSecurityDeposit(msg.sender, _aOfSGB);  
 
         (rsHash, sHash) = sv.redeemScriptToSecretHash(_rs);
-
+        order.aOfSGB = _aOfSGB;
         order.rsHash = rsHash;
         order.sHash = sHash;
         order.txId = _txId;
@@ -219,7 +221,9 @@ contract Swingby is FundManager {
 
         unlockCollateralDeposit(order.borrower, order.aOfWei);
 
-        unlockSecurityDeposit(msg.sender, 3000 * multiplexer);
+        unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
+
+        unlockSecurityDeposit(order.lender, order.aOfSGB);
 
         order.status = Status.canceled;
 
@@ -284,6 +288,8 @@ contract Swingby is FundManager {
 
         unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
         
+        unlockSecurityDeposit(order.lender, order.aOfSGB);
+
         // send fees to lender
         tokenBalances[sgb][order.borrower] -= 400 * multiplexer;
         tokenBalances[sgb][order.lender] += 400 * multiplexer;
