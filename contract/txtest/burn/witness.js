@@ -71,8 +71,8 @@ module.exports = async function (deployer, net, accounts) {
             deposited(burner, result.args)
         if (result.event == 'OrderSubmitted')
             orderSubmitted(burner, result.args)
-        if (result.event == 'ConfirmedByProvider')
-            confirmedByProvider(burner, result.args)
+        if (result.event == 'ConfirmedByLender')
+            confirmedByLender(burner, result.args)
         if (result.event == "ConfirmedByWtitness")
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
@@ -94,10 +94,6 @@ function deposited(contract, args) {
 }
 
 
-function orderSubmitted(contract, args) {
-    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber()/1e18} aOfWei: ${args._aOfWei.toNumber()/1e18} ethLimit: ${args._ethLimit.toNumber()/1e18}`)
-    showBalance(contract, args._submitter, args)
-}
 
 function orderTaked(contract, args) {
     log(contract, `OrderTaked ID: ${args._orderId.toNumber()} Depositor: ${args._depositor} secretHash: ${args._secretHash}`)
@@ -117,18 +113,10 @@ function executed(contract, args) {
 }
 
 
-
-
 function tokenDeposited(contract, args) {
-    log(contract, `TokenDeposited token=${args._token} ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
+    log(contract, `TokenDeposited token = ${args._token} ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
+    showSGBBalance(contract, args._token, args._from)
 }
-
-
-
-
-
-
-
 
 function addedNewPrice(contract, args) {
     log(contract, `AddedNewPrice: pair: ${args._pair} price: ${args._price/1e18} priceOfEMA: ${args._priceOfEMA/1e18}`)
@@ -137,7 +125,12 @@ function addedNewPrice(contract, args) {
 
 async function showBalance(contract, account, args) {
     const balance = await contract.balanceOf(account)
-    log(contract, `ETH balance : ${account} ${balance.toNumber() /1e18}`)
+    log(contract, `ETH balance in contract : ${account} ${balance.toNumber() /1e18}`)
+}
+
+async function showSGBBalance(contract, token, account, args) {
+    const balance = await contract.balanceOfToken(token, account)
+    log(contract, `SGB balance in contract : ${account} ${balance.toNumber() /1e18}`)
 }
 
 function log(contract, message) {
@@ -162,15 +155,15 @@ async function getDebts(contract, provider) {
     log(contract, `Provider-Debts : ${provider} aOfSat: ${debts.toNumber() /1e18}`)
 }
 
-function requestSubmitted(contract, args) {
-    log(contract, `RequestSubmitted ID: ${args._reqId.toNumber()}, ${args._user} aOfSat: ${args._aOfSat.toNumber()/1e18} minLock =: ${args._mLockAmount.toNumber() /1e18} aOfWei: ${args._aOfWei.toNumber() / 1e18}`)
-    log(contract, `RequestSubmitted pubkey: ${args._pubkey}`)
+function orderSubmitted(contract, args) {
+    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()}, ${args._user} aOfSat: ${args._aOfSat.toNumber()/1e18} minLock =: ${args._mLockAmount.toNumber() /1e18} aOfWei: ${args._aOfWei.toNumber() / 1e18}`)
+    log(contract, `OrderSubmitted pubkey: ${args._pubkey}`)
     getPrice(contract)
     showBalance(contract, args._user, args)
 }
 
-function confirmedByProvider(contract, args) {
-    log(contract, `ConfirmedByProvider ID: ${args._reqId.toNumber()} rsHash: ${args._rsHash} sHash: ${args._sHash} txId: ${args._txId}`)
+function confirmedByLender(contract, args) {
+    log(contract, `ConfirmedByLender ID: ${args._orderId.toNumber()} rsHash: ${args._rsHash} sHash: ${args._sHash} txId: ${args._txId}`)
     orderPool.push(args)
 }
 

@@ -23,7 +23,7 @@ module.exports = async function (deployer, net, accounts) {
     const balance = await sw.balanceOf(address)
     console.log(balance.toNumber() / 1e18)
 
-    let _aOfSat = 0.01 * 1e18
+    let _aOfSat = 0.02 * 1e18
     let _aOfWei = 36 * 1e18
     let _pubkey = pubkey
     let _interest = 1000
