@@ -25,8 +25,6 @@ module.exports = async function (deployer, net, accounts) {
         value: 0,
         from: address
     })
-
-    console.log(liquidateByTime.logs[0].args.value.toNumber())
     process.exit()
 
 }

@@ -160,7 +160,7 @@ async function getDebts(contract, provider) {
 }
 
 function liquidated(contract, args) {
-    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfSat: ${args.aOfSat.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}}`)
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfWei: ${args.aOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}}`)
     showBalance(contract, args.borrower, args)
 
 }
