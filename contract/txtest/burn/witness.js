@@ -173,7 +173,6 @@ function cancelled(contract, args) {
 
     getPrice(contract)
     showBalance(contract, args.borrower, args)
-
 }
 
 function confirmedByLender(contract, args) {
@@ -187,7 +186,7 @@ function confirmedByWitness(contract, args) {
 
 function btctMinted(contract, args) {
     getBTCT(contract)
-    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} Submitter: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18}`)
+    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} Submitter: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
     getDebts(burner, args.borrower)
     
 }

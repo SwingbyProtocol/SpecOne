@@ -90,7 +90,8 @@ contract Swingby is FundManager, AddressManager {
     event BTCTMinted(
         uint    orderId, 
         address borrower, 
-        uint    aOfSat
+        uint    aOfSat,
+        uint    period
     );
 
     event BTCTBurned(
@@ -253,7 +254,7 @@ contract Swingby is FundManager, AddressManager {
 
         order.status = Status.minted;
 
-        emit BTCTMinted(_orderId, order.borrower, order.aOfSat);
+        emit BTCTMinted(_orderId, order.borrower, order.aOfSat, order.period);
     }
 
     function submitBurn(uint _orderId) public {
