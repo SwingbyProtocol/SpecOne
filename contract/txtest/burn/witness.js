@@ -83,6 +83,8 @@ module.exports = async function (deployer, net, accounts) {
             burnExecuted(burner, result.args)
         if (result.event == "BTCTMinted")
             btctMinted(burner, result.args)
+        if (result.event == "Cancelled")
+            cancelled(burner, result.args)
     })
 
 
@@ -158,8 +160,20 @@ async function getDebts(contract, provider) {
 function orderSubmitted(contract, args) {
     log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} aOfSat: ${args.aOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} aOfWei: ${args.aOfWei.toNumber() / 1e18}`)
     log(contract, `OrderSubmitted pubkey: ${args.pubkey}`)
+    log(contract, `OrderSubmitted rHash: ${args.rHash}`)
+
     getPrice(contract)
     showBalance(contract, args.user, args)
+}
+
+function cancelled(contract, args) {
+    log(contract, `OrderCancelled ID: ${args.orderId.toNumber()}, ${args.borrower} aOfSat: ${args.aOfSat.toNumber()/1e18} `)
+    log(contract, `OrderCancelled sR: ${args.sR}`)
+    log(contract, `OrderCancelled rHash: ${args.rHash}`)
+
+    getPrice(contract)
+    showBalance(contract, args.borrower, args)
+
 }
 
 function confirmedByLender(contract, args) {
@@ -173,8 +187,8 @@ function confirmedByWitness(contract, args) {
 
 function btctMinted(contract, args) {
     getBTCT(contract)
-    log(contract, `BTCTMinted ID: ${args.reqId.toNumber()} Submitter: ${args.submitter} aOfSat: ${args.aOfSat.toNumber() /1e18}`)
-    getDebts(burner, args.submitter)
+    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} Submitter: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18}`)
+    getDebts(burner, args.borrower)
     
 }
 

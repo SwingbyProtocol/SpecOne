@@ -32,7 +32,9 @@ module.exports = async function (deployer, net, accounts) {
 
     let _sR = "f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
 
-    let _rHash = bitcoin.crypto.sha256(_sR)
+    let buf = new Buffer(_sR, 'hex');
+
+    let _rHash = bitcoin.crypto.sha256(buf)
 
     console.log(_rHash.toString('hex'), pubkey)
 

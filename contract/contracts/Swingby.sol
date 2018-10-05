@@ -61,7 +61,7 @@ contract Swingby is FundManager, AddressManager {
         uint    mLockAmount, 
         uint    aOfWei, 
         uint    aOfSat, 
-        bytes32 rsh, 
+        bytes32 rHash, 
         bytes   pubkey
     );
 
@@ -83,6 +83,7 @@ contract Swingby is FundManager, AddressManager {
         uint    orderId, 
         address borrower, 
         bytes   sR, 
+        bytes32 rHash,
         uint    aOfSat
     );
 
@@ -216,8 +217,11 @@ contract Swingby is FundManager, AddressManager {
         require(order.borrower == msg.sender);
 
         if (order.status == Status.verified) {
+
             require(sha256(_sR) == order.rHash);
+
         } else {
+
             require(order.status == Status.opened);
         }
 
@@ -229,7 +233,7 @@ contract Swingby is FundManager, AddressManager {
 
         order.status = Status.canceled;
 
-        emit Cancelled(_orderId, order.borrower, _sR, order.aOfSat);
+        emit Cancelled(_orderId, order.borrower, _sR, sha256(_sR), order.aOfSat);
 
     }
 
