@@ -21,12 +21,12 @@ module.exports = async function (deployer, net, accounts) {
 
     const ID = process.env.ID
 
-    const deposit = await swingby.liquidateByTime(ID, {
+    const liquidateByTime = await swingby.liquidateByTime(ID, {
         value: 0,
         from: address
     })
 
-    console.log(deposit.logs[0].args.value.toNumber())
+    console.log(liquidateByTime.logs[0].args.value.toNumber())
     process.exit()
 
 }
