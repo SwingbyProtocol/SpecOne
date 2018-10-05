@@ -258,10 +258,10 @@ contract Swingby is FundManager, AddressManager {
 
     function submitBurn(uint _orderId) public {
         
-        require(order.borrower == msg.sender);
-
         Order storage order = orders[_orderId];
         
+        require(order.borrower == msg.sender);
+
         require(balanceOfToken(btct, order.borrower) >= order.aOfSat);
 
         tokenBalances[btct][order.borrower] -= order.aOfSat;
@@ -278,7 +278,7 @@ contract Swingby is FundManager, AddressManager {
 
         require(order.status == Status.burning);
 
-        require(order.sHash == sha256(_sS));   // BTC send to borrower from lender
+        //require(order.sHash == sha256(_sS));   // BTC send to borrower from lender
 
         if (debts[order.borrower] >= order.aOfSat) {
             debts[order.borrower] -= order.aOfSat;

@@ -79,7 +79,7 @@ module.exports = async function (deployer, net, accounts) {
             attached(burner, result.args)
         if (result.event == "TokenDeposited")
             tokenDeposited(burner, result.args)
-        if (result.event == "Executed")
+        if (result.event == "BTCTBurned")
             burnExecuted(burner, result.args)
         if (result.event == "BTCTMinted")
             btctMinted(burner, result.args)
@@ -117,7 +117,7 @@ function executed(contract, args) {
 
 function tokenDeposited(contract, args) {
     log(contract, `TokenDeposited token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
-    showSGBBalance(contract, args.token, args.from)
+    // showSGBBalance(contract, args.token, args.from)
 }
 
 function addedNewPrice(contract, args) {
@@ -197,8 +197,8 @@ function attached(contract, args) {
 }
 
 function burnExecuted(contract, args) {
-    log(contract, `BurnExecuted ID: ${args.reqId.toNumber()} provider: ${args.provider} secret: ${args.secret} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
-    getDebts(contract, args.provider)
+    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} provider: ${args.borrower} secret: ${args.sS} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
+    getDebts(contract, args.borrower)
 }
 
 let checkHTLC = function (args, isTestnet) {
