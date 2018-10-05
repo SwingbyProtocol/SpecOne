@@ -100,6 +100,13 @@ contract Swingby is FundManager, AddressManager {
         bytes   sS, 
         uint    aOfSat
     );
+
+    event Liquidated(
+        uint    orderId,
+        address borrower,
+        uint    liquidatedTime,
+        uint    aOfWei
+    );
     
     constructor(address _sv, address _we, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
@@ -408,6 +415,8 @@ contract Swingby is FundManager, AddressManager {
         debtPool += _order.aOfSat;
 
         _order.status = Status.liquidated;
+
+        emit Liquidated(_orderId, _order.borrower, now, _order.aOfWei);
     }
 
     function lockSecurityDeposit(address _user, uint _amount) internal {

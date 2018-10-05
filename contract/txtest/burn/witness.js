@@ -85,6 +85,8 @@ module.exports = async function (deployer, net, accounts) {
             btctMinted(burner, result.args)
         if (result.event == "Cancelled")
             cancelled(burner, result.args)
+        if (result.event == "Liquidated")
+            liquidated(burner, result.args)
     })
 
 
