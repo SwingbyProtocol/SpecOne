@@ -286,7 +286,7 @@ contract Swingby is FundManager, AddressManager {
 
         require(order.status == Status.burning);
 
-        //require(order.sHash == sha256(_sS));   // BTC send to borrower from lender
+        require(order.sHash == sha256(_sS));   // BTC send to borrower from lender
 
         if (debts[order.borrower] >= order.aOfSat) {
             debts[order.borrower] -= order.aOfSat;
