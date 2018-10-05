@@ -30,7 +30,7 @@ module.exports = async function (deployer, net, accounts) {
     // console.log(Math.floor(Date.now() / 1000))
     let _period = Math.floor(Date.now() / 1000) + 1209600
 
-    let _sR = "0xf0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
+    let _sR = "f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
 
     let _rHash = bitcoin.crypto.sha256(_sR)
 
