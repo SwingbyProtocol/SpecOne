@@ -159,6 +159,10 @@ async function getDebts(contract, provider) {
     log(contract, `Provider-Debts : ${provider} aOfSat: ${debts.toNumber() /1e18}`)
 }
 
+function liquidated(contract, args) {
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfSat: ${args.aOfSat.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}}`)
+}
+
 function orderSubmitted(contract, args) {
     log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} aOfSat: ${args.aOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} aOfWei: ${args.aOfWei.toNumber() / 1e18}`)
     log(contract, `OrderSubmitted pubkey: ${args.pubkey}`)
