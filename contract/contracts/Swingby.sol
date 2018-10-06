@@ -107,6 +107,12 @@ contract Swingby is FundManager, AddressManager {
         uint    liquidatedTime,
         uint    aOfWei
     );
+
+    event BurnSubmitted(
+        uint    orderId,
+        address borrower,
+        uint    aOfSat
+    );
     
     constructor(address _sv, address _we, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
@@ -277,6 +283,8 @@ contract Swingby is FundManager, AddressManager {
         lockedBTCTBalances[order.borrower] += order.aOfSat;
 
         order.status = Status.burning;
+
+        emit BurnSubmitted(_orderId, order.borrower, order.aOfSat);
 
     }
 
