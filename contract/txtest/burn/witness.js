@@ -87,6 +87,9 @@ module.exports = async function (deployer, net, accounts) {
             cancelled(burner, result.args)
         if (result.event == "Liquidated")
             liquidated(burner, result.args)
+        if (result.event == "Exchanged")
+            exchanged(burner, result.args)
+
     })
 
 
@@ -98,28 +101,14 @@ function deposited(contract, args) {
 }
 
 
-
-function orderTaked(contract, args) {
-    log(contract, `OrderTaked ID: ${args.orderId.toNumber()} Depositor: ${args.depositor} secretHash: ${args.secretHash}`)
-}
-
-
-function confirmedBySubmitter(contract, args) {
-    log(contract, `ConfirmedBySubmitter ID: ${args.orderId.toNumber()} Submitter: ${args.submitter} `)
-}
-
-function finalized(contract, args) {
-    log(contract, `Finalized ID: ${args.orderId.toNumber()} verifiedTime: ${args.verifiedTime} `)
-}
-
-function executed(contract, args) {
-    log(contract, `Executed ID: ${args.orderId.toNumber()} Depositor: ${args.depositor} aOfSat: ${args.aOfSat.toNumber() /1e18}`)
+function exchanged(contract, args) {
+    log(contract, `Exchanged : ${args.aOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.aOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
 }
 
 
 function tokenDeposited(contract, args) {
     log(contract, `TokenDeposited token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
-    // showSGBBalance(contract, args.token, args.from)
+    showTokenBalance(contract, args.token, args.from)
 }
 
 function addedNewPrice(contract, args) {
@@ -132,9 +121,9 @@ async function showBalance(contract, account, args) {
     log(contract, `ETH balance in contract : ${account} ${balance.toNumber() /1e18}`)
 }
 
-async function showSGBBalance(contract, token, account, args) {
+async function showTokenBalance(contract, token, account, args) {
     const balance = await contract.balanceOfToken(token, account)
-    log(contract, `SGB balance in contract : ${account} ${balance.toNumber() /1e18}`)
+    log(contract, `Token balance in contract : token: ${token} account: ${account} ${balance.toNumber()} ${balance.toNumber() /1e18}`)
 }
 
 function log(contract, message) {
@@ -154,14 +143,20 @@ async function getBTCT(contract) {
 }
 
 
-async function getDebts(contract, provider) {
-    const debts = await contract.getDebts(provider);
-    log(contract, `Provider-Debts : ${provider} aOfSat: ${debts.toNumber() /1e18}`)
+async function getDebts(contract, borrower) {
+    const debts = await contract.getDebts(borrower);
+    log(contract, `Borrower-Debts : ${borrower} aOfSat: ${debts.toNumber() /1e18}`)
+}
+
+async function showLiquidate(contract, args) {
+    const rate = await contract.getMaintenance(args.orderId.toNumber())
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, rate: ${rate.toNumber() / 1e18} %`)
 }
 
 function liquidated(contract, args) {
     log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfWei: ${args.aOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}`)
     showBalance(contract, args.borrower, args)
+    showLiquidate(contract, args)
 }
 
 function orderSubmitted(contract, args) {
@@ -193,9 +188,9 @@ function confirmedByWitness(contract, args) {
 
 function btctMinted(contract, args) {
     getBTCT(contract)
-    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} Submitter: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
+    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
     getDebts(burner, args.borrower)
-    
+
 }
 
 function attached(contract, args) {
@@ -203,7 +198,7 @@ function attached(contract, args) {
 }
 
 function burnExecuted(contract, args) {
-    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} provider: ${args.borrower} secret: ${args.sS} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
+    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} secret: ${args.sS} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
     getDebts(contract, args.borrower)
 }
 
