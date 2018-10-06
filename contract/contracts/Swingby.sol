@@ -5,9 +5,10 @@ import "./AddressManager.sol";
 import "./FundManager.sol";
 import "./WitnessEngine.sol";
 import "./TrustedOracleInterface.sol";
+import "./Config.sol";
 
 
-contract Swingby is FundManager, AddressManager {
+contract Swingby is FundManager, AddressManager, Config {
 
     mapping (address => uint256) private lockedBalances;
     mapping (address => uint256) private lockedSGBBalances;
@@ -137,7 +138,7 @@ contract Swingby is FundManager, AddressManager {
 
         uint minLockAmount;
 
-        minLockAmount = 1 * 10 ** 18 * (_aOfSat * 140 / getPrice()) / 100;
+        minLockAmount = 1 * 10 ** 18 * (_aOfSat * liquidationRatio / getPrice()) / 100;
     
         require(_period >= now);
 
@@ -151,7 +152,7 @@ contract Swingby is FundManager, AddressManager {
 
         lockCollateralDeposit(msg.sender, _aOfWei);
 
-        lockSecurityDeposit(msg.sender, 3000 * multiplexer);
+        lockSecurityDeposit(msg.sender, borrowerSeruityDeposit * multiplexer);
 
         Order memory order = Order({
             aOfSat: _aOfSat,
@@ -185,7 +186,7 @@ contract Swingby is FundManager, AddressManager {
 
         require(order.sHash == 0x0);
 
-        require(_aOfSGB >= 3000 * multiplexer);   // minimum security deposit
+        require(_aOfSGB >= minSerurityDeposit * multiplexer);   // minimum security deposit
 
         lockSecurityDeposit(msg.sender, _aOfSGB);  
 
@@ -241,7 +242,7 @@ contract Swingby is FundManager, AddressManager {
 
         unlockCollateralDeposit(order.borrower, order.aOfWei);
 
-        unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
+        unlockSecurityDeposit(order.borrower, borrowerSeruityDeposit * multiplexer);
 
         unlockSecurityDeposit(order.lender, order.aOfSGB);
 
@@ -412,7 +413,7 @@ contract Swingby is FundManager, AddressManager {
             
         unlockCollateralDeposit(_order.borrower, _order.aOfWei);
 
-        unlockSecurityDeposit(_order.borrower, 3000 * multiplexer);
+        unlockSecurityDeposit(_order.borrower, borrowerSeruityDeposit * multiplexer);
 
         ethBalances[_order.borrower] -= _order.aOfWei;
 
