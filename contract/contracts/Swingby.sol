@@ -309,13 +309,13 @@ contract Swingby is FundManager, AddressManager, Config {
 
         unlockCollateralDeposit(order.borrower, order.aOfWei);
 
-        unlockSecurityDeposit(order.borrower, 3000 * multiplexer);
+        unlockSecurityDeposit(order.borrower, borrowerSeruityDeposit * multiplexer);
         
         unlockSecurityDeposit(order.lender, order.aOfSGB);
 
         // send fees to lender
-        tokenBalances[sgb][order.borrower] -= 400 * multiplexer;
-        tokenBalances[sgb][order.lender] += 400 * multiplexer;
+        tokenBalances[sgb][order.borrower] -= feeOfSGB * multiplexer;
+        tokenBalances[sgb][order.lender] += feeOfSGB * multiplexer;
 
         uint aOfInterest = (order.period - order.sTime) / 365 days * order.interest;
         uint aOfETH = 1 * 10 ** 18 * (order.aOfSat * 100 / getPrice()) / 100;
@@ -388,9 +388,8 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     function getPrice() public view returns (uint) {
-        // return oracle.getPrice();
         // 34197279102384291
-        return 34197279102384291;
+        return oracle.getPrice();
     }
 
     function getDebts(address _provider) public view returns (uint) {
