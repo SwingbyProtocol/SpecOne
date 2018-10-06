@@ -114,6 +114,13 @@ contract Swingby is FundManager, AddressManager, Config {
         address borrower,
         uint    aOfSat
     );
+
+    event Exchanged(
+        address keeper,
+        uint    aOfWei,
+        uint    aOfDebt,
+        uint    remainDebts
+    );
     
     constructor(address _sv, address _we, address _oracle, address _sgb) public { 
         sv = ScriptVerification(_sv);
@@ -350,9 +357,10 @@ contract Swingby is FundManager, AddressManager, Config {
 
         uint limit = 1 * 10 ** 18 * (order.aOfSat * 135 / getPrice()) / 100;
 
-        if (order.aOfWei < limit) {
-            liquidate(order, _orderId);
-        }
+        require(order.aOfWei < limit);
+        
+        liquidate(order, _orderId);
+        
         return true;
     }
     
@@ -370,6 +378,8 @@ contract Swingby is FundManager, AddressManager, Config {
         uint amount = 1 * 10 ** 18 * (_aOfSat * 103 / getPrice()) / 100;
 
         msg.sender.transfer(amount);
+
+        emit Exchanged(msg.sender, amount, _aOfSat, debtPool);
     }
 
     function purge(uint _orderId, bytes _sR) public {
@@ -406,6 +416,15 @@ contract Swingby is FundManager, AddressManager, Config {
 
     function getSGB() public view returns (address) {
         return address(sgb);
+    }
+
+    function getMaintenance(uint _orderId) public view returns (uint) {
+
+        Order storage order = orders[_orderId];
+
+        uint limit = 1 * 10 ** 18 * (order.aOfSat * 100 / getPrice()) / 100;
+
+        return (order.aOfWei * 1 * 10 ** 20) / limit;
     }
 
     function liquidate(Order _order, uint _orderId) internal returns (bool) {
