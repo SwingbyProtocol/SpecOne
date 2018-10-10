@@ -18,7 +18,7 @@ contract WitnessEngine is FundManager {
 
     Vote[] private votes;
 
-    ERC20 public token;
+    Token public token;
 
     modifier onlyWitness() {
         require(witnesses[msg.sender]);
@@ -35,7 +35,7 @@ contract WitnessEngine is FundManager {
 
     function setToken(address _token) public {
         require(address(token) == 0x0);
-        token = ERC20(_token);
+        token = Token(_token);
     }
 
     function submitVote(uint _mode, address _user) public onlyWitness() {

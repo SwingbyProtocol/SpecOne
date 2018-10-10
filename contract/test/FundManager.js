@@ -4,13 +4,12 @@ const Token = artifacts.require("./Token.sol")
 contract('FundManager', function (accounts) {
   it("should put 100 ether in to the contract", async function () {
 
-    token = await Token.new("SwingbyToken", "NT", 18)
+    token = await Token.new("SwingbyToken", "SGB", 18)
     fm = await FundManager.new()
 
-    const mint = await token.mint(50000 * 1e18)
+    const mint = await token.mint(accounts[0], 50000 * 1e18)
 
     initialBalance = await web3.eth.getBalance(accounts[0])
-
     const deposit = await fm.deposit({
       value: web3.toWei(100, 'ether')
     })

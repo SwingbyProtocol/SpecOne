@@ -1,19 +1,20 @@
 pragma solidity 0.4.24;
 
-import "./ERC20.sol";
+import "./Token.sol";
 
 
 contract FundManager {
+    using SafeMath for uint256;
 
     mapping(address => uint256) public ethBalances;
 
     mapping(address => mapping(address => uint256)) public tokenBalances;
 
-    event TokenDeposited(address _token, address _from, uint256 _value);
-    event TokenWithdrew(address _token, address _to, uint256 _value);
+    event TokenDeposited(address token, address from, uint256 value);
+    event TokenWithdrew(address token, address to, uint256 value);
 
-    event Deposited(address _from, uint256 _value);
-    event Withdrew(address _to, uint256 _value);
+    event Deposited(address from, uint256 value);
+    event Withdrew(address to, uint256 value);
 
     function () public payable {
         if (msg.value > 0)
@@ -22,18 +23,18 @@ contract FundManager {
 
     function depositToken(address _token, uint256 _value) public {
 
-        ERC20 token = ERC20(_token);
+        Token token = Token(_token);
 
         token.transferFrom(msg.sender, this, _value);   
 
-        tokenBalances[_token][msg.sender] += _value;    
+        tokenBalances[_token][msg.sender] = tokenBalances[_token][msg.sender].add(_value);    
 
         emit TokenDeposited(_token, msg.sender, _value);
     }
 
     function withdrawToken(address _token) public {
         
-        ERC20 token = ERC20(_token);
+        Token token = Token(_token);
 
         uint256 value = tokenBalances[_token][msg.sender];
 
@@ -46,7 +47,7 @@ contract FundManager {
 
     function deposit() public payable {
 
-        ethBalances[msg.sender] += msg.value;
+        ethBalances[msg.sender] = ethBalances[msg.sender].add(msg.value);
 
         emit Deposited(msg.sender, msg.value);
     }

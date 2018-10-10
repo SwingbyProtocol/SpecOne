@@ -5,8 +5,8 @@ import "./BTCLib.sol";
 
 contract ScriptVerification {
 
-    event Verified(bytes32 _txId, uint _amount);
-    
+    event Verified(bytes32 txId, uint amount);
+
     function verifyTx(
         bytes _rawTx, 
         bytes32 _txId, 
@@ -14,7 +14,7 @@ contract ScriptVerification {
         uint _amount, 
         uint _fee
     ) 
-    public returns (bool) 
+        public returns (bool) 
     {
         uint doubleHash = uint(sha256(abi.encodePacked(sha256(_rawTx))));
         bytes32 txId = bytes32(flip32Bytes(doubleHash));
@@ -26,25 +26,23 @@ contract ScriptVerification {
         bytes20 outputAddress2;
         uint    outputAmount1;
         uint    outputAmount2;
-        bool    firstMatch = false;
-        bool    secondMatch = false;
+        bool    status1 = false;
+        bool    status2 = false;
 
         (outputAmount1, outputAddress1, outputAmount2, outputAddress2) = BTCLib.getFirstTwoOutputs(_rawTx);
         
         if (outputAddress1 == _beneficially) {
-            if (satToValue(outputAmount1) == _amount + _fee) {
-                firstMatch = true;
-            }
+            status1 = checkValue(outputAmount1, _amount, _fee);
         }
+
         if (outputAddress2 == _beneficially) {
-            if (satToValue(outputAmount2) == _amount + _fee) {
-                secondMatch = true;
-            }
+            status2 = checkValue(outputAmount2, _amount, _fee);
         }
-        if (!firstMatch && !secondMatch)
+
+        if (!status1 && !status2) 
             return false;
 
-        if (firstMatch && secondMatch)
+        if (status1 && status2)
             return false;
 
         emit Verified(txId, satToValue(outputAmount1));
@@ -89,5 +87,12 @@ contract ScriptVerification {
 
     function satToValue(uint _sat) internal pure returns (uint) {
         return _sat * 10 ** 10;
+    }
+
+    function checkValue(uint _target, uint _amount, uint _fee) internal pure returns (bool) {
+        if (satToValue(_target) == _amount + _fee) {
+            return true;
+        }
+        return false;
     }
 }

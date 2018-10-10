@@ -19,16 +19,15 @@ module.exports = async function (deployer, net, accounts) {
 
     let swingby = await Swingby.deployed()
 
-    const deposit = await swingby.deposit({
-        value: web3.toWei(44, 'ether'),
+    let ID = process.env.ID
+    let secret = "0xc172d9303c8f97262c9809fcbbe2649b5be7e62ebc3c1788b60f978653257cda"
+
+    const execute = await swingby.burn(ID, secret, {
+        value: 0,
         from: address
     })
 
-    const balance = await swingby.balanceOf(address)
-
-    console.log(balance.toNumber())
-
-    console.log(deposit.logs[0].args.value.toNumber())
+    console.log(execute.logs)
     process.exit()
 
 }

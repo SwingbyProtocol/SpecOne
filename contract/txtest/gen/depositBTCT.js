@@ -1,6 +1,7 @@
 const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
 const Swingby = artifacts.require("./Swingby.sol")
+const Token = artifacts.require("./Token.sol")
 
 const mnemonic = process.env.MNEMONIC_KEY;
 
@@ -19,16 +20,19 @@ module.exports = async function (deployer, net, accounts) {
 
     let swingby = await Swingby.deployed()
 
-    const deposit = await swingby.deposit({
-        value: web3.toWei(44, 'ether'),
+    const token = await Token.at(await swingby.getBTCT())
+
+    const tokenBlance = await token.balanceOf(address)
+    console.log(tokenBlance.toNumber())
+
+    const approve = await token.approve(swingby.address, web3.toWei(0.02, 'ether'))
+
+    const depositToken = await swingby.depositToken(token.address, web3.toWei(0.02, 'ether'), {
+        value: 0,
         from: address
     })
 
-    const balance = await swingby.balanceOf(address)
-
-    console.log(balance.toNumber())
-
-    console.log(deposit.logs[0].args.value.toNumber())
+    console.log(depositToken.logs)
     process.exit()
 
 }

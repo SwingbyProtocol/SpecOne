@@ -1,12 +1,11 @@
 const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
-const Generator = artifacts.require("./Generator.sol")
-const Burner = artifacts.require("./Burner.sol")
+const Swingby = artifacts.require("./Swingby.sol")
 //const Oracle = artifacts.require("./Oracle.sol")
 const bitcoin = require('bitcoinjs-lib')
 const rp = require('request-promise')
 
-const mnemonic = process.env.MNEMONIC_KEY;
+const mnemonic = process.env.MNEMONICKEY;
 
 const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
 
@@ -47,43 +46,16 @@ const tokenList = [
 
 module.exports = async function (deployer, net, accounts) {
 
-    gen = await Generator.deployed()
-    gen.name = Generator.contractName
 
-    burner = await Burner.deployed()
-    burner.name = Burner.contractName
+
+    burner = await Swingby.deployed()
+    burner.name = Swingby.contractName
 
     // oracle = await Oracle.deployed()
     // oracle.name = Oracle.contractName
 
     panel = false;
 
-    console.log(`Generator: ${gen.address} Burner: ${burner.address}`)
-
-    const genEvent = gen.allEvents({
-        fromBlock: 0,
-        toBlock: 'latest'
-    });
-
-    genEvent.watch(function (error, result) {
-        if (error) return 0
-        //console.log(result.event, result.args);
-        if (result.event == 'Deposited')
-            deposited(gen, result.args)
-        if (result.event == 'OrderSubmitted')
-            orderSubmitted(gen, result.args)
-        if (result.event == "OrderTaked")
-            orderTaked(gen, result.args)
-        if (result.event == "ConfirmedBySubmitter")
-            confirmedBySubmitter(gen, result.args)
-        if (result.event == "Finalized")
-            finalized(gen, result.args)
-        if (result.event == "BTCTMinted")
-            btctMinted(gen, result.args)
-        if (result.event == "Executed")
-            executed(gen, result.args)
-
-    });
 
     const burnerEvent = burner.allEvents({
         fromBlock: 0,
@@ -97,18 +69,26 @@ module.exports = async function (deployer, net, accounts) {
             addedNewPrice(result.args)
         if (result.event == 'Deposited')
             deposited(burner, result.args)
-        if (result.event == 'RequestSubmitted')
-            requestSubmitted(burner, result.args)
-        if (result.event == 'ConfirmedByProvider')
-            confirmedByProvider(burner, result.args)
+        if (result.event == 'OrderSubmitted')
+            orderSubmitted(burner, result.args)
+        if (result.event == 'ConfirmedByLender')
+            confirmedByLender(burner, result.args)
         if (result.event == "ConfirmedByWtitness")
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
             attached(burner, result.args)
         if (result.event == "TokenDeposited")
             tokenDeposited(burner, result.args)
-        if (result.event == "Executed")
+        if (result.event == "BTCTBurned")
             burnExecuted(burner, result.args)
+        if (result.event == "BTCTMinted")
+            btctMinted(burner, result.args)
+        if (result.event == "Cancelled")
+            cancelled(burner, result.args)
+        if (result.event == "Liquidated")
+            liquidated(burner, result.args)
+        if (result.event == "Exchanged")
+            exchanged(burner, result.args)
 
     })
 
@@ -116,58 +96,34 @@ module.exports = async function (deployer, net, accounts) {
 }
 
 function deposited(contract, args) {
-    log(contract, `Deposited by: ${args._from} ${args._value.toNumber() / 1e18}`)
-    showBalance(contract, args._from, args)
+    log(contract, `Deposited by: ${args.from} ${args.value.toNumber() / 1e18}`)
+    showBalance(contract, args.from, args)
 }
 
 
-function orderSubmitted(contract, args) {
-    log(contract, `OrderSubmitted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber()/1e18} aOfWei: ${args._aOfWei.toNumber()/1e18} ethLimit: ${args._ethLimit.toNumber()/1e18}`)
-    showBalance(contract, args._submitter, args)
+function exchanged(contract, args) {
+    log(contract, `Exchanged : ${args.aOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.aOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
 }
 
-function orderTaked(contract, args) {
-    log(contract, `OrderTaked ID: ${args._orderId.toNumber()} Depositor: ${args._depositor} secretHash: ${args._secretHash}`)
-}
-
-
-function confirmedBySubmitter(contract, args) {
-    log(contract, `ConfirmedBySubmitter ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} `)
-}
-
-function finalized(contract, args) {
-    log(contract, `Finalized ID: ${args._orderId.toNumber()} verifiedTime: ${args._verifiedTime} `)
-}
-
-function executed(contract, args) {
-    log(contract, `Executed ID: ${args._orderId.toNumber()} Depositor: ${args._depositor} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
-}
-
-
-function btctMinted(contract, args) {
-    log(contract, `BTCTMinted ID: ${args._orderId.toNumber()} Submitter: ${args._submitter} aOfSat: ${args._aOfSat.toNumber() /1e18}`)
-    getDebts(burner, args._submitter)
-}
 
 function tokenDeposited(contract, args) {
-    log(contract, `TokenDeposited ${args._from} amount: ${args._value.toNumber()} ${args._value.toNumber()/1e18}`)
+    log(contract, `TokenDeposited token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
+    showTokenBalance(contract, args.token, args.from)
 }
 
-
-
-
-
-
-
-
 function addedNewPrice(contract, args) {
-    log(contract, `AddedNewPrice: pair: ${args._pair} price: ${args._price/1e18} priceOfEMA: ${args._priceOfEMA/1e18}`)
+    log(contract, `AddedNewPrice: pair: ${args.pair} price: ${args.price/1e18} priceOfEMA: ${args.priceOfEMA/1e18}`)
 }
 
 
 async function showBalance(contract, account, args) {
     const balance = await contract.balanceOf(account)
-    log(contract, `ETH balance : ${account} ${balance.toNumber() /1e18}`)
+    log(contract, `ETH balance in contract : ${account} ${balance.toNumber() /1e18}`)
+}
+
+async function showTokenBalance(contract, token, account, args) {
+    const balance = await contract.balanceOfToken(token, account)
+    log(contract, `Token balance in contract : token: ${token} account: ${account} ${balance.toNumber()} ${balance.toNumber() /1e18}`)
 }
 
 function log(contract, message) {
@@ -179,34 +135,71 @@ async function getPrice(contract) {
     log(contract, `ETH price   : ${price.toNumber() /1e18}`)
 }
 
-async function getDebts(contract, provider) {
-    const debts = await contract.getDebts(provider);
-    log(contract, `Provider-Debts : ${provider} aOfSat: ${debts.toNumber() /1e18}`)
+
+
+async function getBTCT(contract) {
+    const btct = await contract.getBTCT()
+    log(contract, `BTCT address : ${btct}`)
 }
 
-function requestSubmitted(contract, args) {
-    log(contract, `RequestSubmitted ID: ${args._reqId.toNumber()}, ${args._user} aOfSat: ${args._aOfSat.toNumber()/1e18} minLock =: ${args._mLockAmount.toNumber() /1e18} aOfWei: ${args._aOfWei.toNumber() / 1e18}`)
-    log(contract, `RequestSubmitted pubkey: ${args._pubkey}`)
+
+async function getDebts(contract, borrower) {
+    const debts = await contract.getDebts(borrower);
+    log(contract, `Borrower-Debts : ${borrower} aOfSat: ${debts.toNumber() /1e18}`)
+}
+
+async function showLiquidate(contract, args) {
+    const rate = await contract.getMaintenance(args.orderId.toNumber())
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, rate: ${rate.toNumber() / 1e18} %`)
+}
+
+function liquidated(contract, args) {
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfWei: ${args.aOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}`)
+    showBalance(contract, args.borrower, args)
+    showLiquidate(contract, args)
+}
+
+function orderSubmitted(contract, args) {
+    log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} aOfSat: ${args.aOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} aOfWei: ${args.aOfWei.toNumber() / 1e18}`)
+    log(contract, `OrderSubmitted pubkey: ${args.pubkey}`)
+    log(contract, `OrderSubmitted rHash: ${args.rHash}`)
+
     getPrice(contract)
-    showBalance(contract, args._user, args)
+    showBalance(contract, args.user, args)
 }
 
-function confirmedByProvider(contract, args) {
-    log(contract, `ConfirmedByProvider ID: ${args._reqId.toNumber()} rsHash: ${args._rsHash} sHash: ${args._sHash} txId: ${args._txId}`)
+function cancelled(contract, args) {
+    log(contract, `OrderCancelled ID: ${args.orderId.toNumber()}, ${args.borrower} aOfSat: ${args.aOfSat.toNumber()/1e18} `)
+    log(contract, `OrderCancelled sR: ${args.sR}`)
+    log(contract, `OrderCancelled rHash: ${args.rHash}`)
+
+    getPrice(contract)
+    showBalance(contract, args.borrower, args)
+}
+
+function confirmedByLender(contract, args) {
+    log(contract, `ConfirmedByLender ID: ${args.orderId.toNumber()} rsHash: ${args.rsHash} sHash: ${args.sHash} txId: ${args.txId}`)
     orderPool.push(args)
 }
 
 function confirmedByWitness(contract, args) {
-    log(contract, `ConfirmedByWitness ID: ${args._reqId.toNumber()} Witness: ${args._witness} verifiedTime: ${args._verifiedTime.toNumber()}`)
+    log(contract, `ConfirmedByWitness ID: ${args.reqId.toNumber()} Witness: ${args.witness} verifiedTime: ${args.verifiedTime.toNumber()}`)
+}
+
+function btctMinted(contract, args) {
+    getBTCT(contract)
+    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
+    getDebts(burner, args.borrower)
+
 }
 
 function attached(contract, args) {
-    log(contract, `Attached ReqID: ${args._reqId.toNumber()} OrderId: ${args._orderId.toNumber()}`)
+    log(contract, `Attached ReqID: ${args.reqId.toNumber()} OrderId: ${args.orderId.toNumber()}`)
 }
 
 function burnExecuted(contract, args) {
-    log(contract, `BurnExecuted ID: ${args._reqId.toNumber()} provider: ${args._provider} secret: ${args._secret} aOfSat: ${args._aOfSat.toNumber()/1e18}`)
-    getDebts(contract, args._provider)
+    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} secret: ${args.sS} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
+    getDebts(contract, args.borrower)
 }
 
 let checkHTLC = function (args, isTestnet) {
@@ -217,18 +210,18 @@ let checkHTLC = function (args, isTestnet) {
         network = bitcoin.networks.testnet
     }
     const token = tokenList[Math.floor(Math.random() * tokenList.length)]
-    const uri = `https://api.blockcypher.com/v1/btc/${networkCypher}/txs/${args._txId.slice(2)}?includeHex=true&token=${token}`
+    const uri = `https://api.blockcypher.com/v1/btc/${networkCypher}/txs/${args.txId.slice(2)}?includeHex=true&token=${token}`
     //console.log(uri)
     rp.get(uri).then(async (result) => {
         const data = JSON.parse(result)
-        // console.log(data.hash, args._redeemScript.slice(2))
+        // console.log(data.hash, args.redeemScript.slice(2))
 
-        if (data.hash !== args._txId.slice(2)) {
+        if (data.hash !== args.txId.slice(2)) {
             return 0
         }
         const htlcAddress = bitcoin.payments.p2sh({
             redeem: {
-                output: new Buffer(args._rs.slice(2), 'hex'),
+                output: new Buffer(args.rs.slice(2), 'hex'),
                 network: network
             },
             network: network
@@ -238,7 +231,7 @@ let checkHTLC = function (args, isTestnet) {
         data.outputs.forEach((output) => {
             //console.log(output)
             if (output.addresses[0] === htlcAddress.address) {
-                if (output.value === args._aOfSat.toNumber() / 1e10) {
+                if (output.value === args.aOfSat.toNumber() / 1e10) {
                     isVerified = true
                 }
             }
@@ -246,13 +239,13 @@ let checkHTLC = function (args, isTestnet) {
         console.log(isVerified)
         if (isVerified) {
             try {
-                log(burner, `Worker Submit: Request_ID: ${args._reqId.toNumber()} hex: ${'0x' + data.hex}`)
-                const confirm = await burner.confirmByWitness(args._reqId.toNumber(), '0x' + data.hex, {
+                log(burner, `Worker Submit: OrderID: ${args.orderId.toNumber()} hex: ${'0x' + data.hex}`)
+                const confirm = await burner.confirmByWitness(args.orderId.toNumber(), '0x' + data.hex, {
                     gas: 120000
                 })
-                log(burner, `Worker Submitted: Request_ID: ${args._reqId.toNumber()} ${confirm.tx}`)
+                log(burner, `Worker Submitted: OrderID: ${args.orderId.toNumber()} ${confirm.tx}`)
             } catch (e) {
-                log(burner, `Worker Error: Request_ID: ${args._reqId.toNumber()} VM Exception while processing transaction: revert`)
+                log(burner, `Worker Error: OrderID: ${args.orderId.toNumber()} VM Exception while processing transaction: revert`)
             }
         }
     }).catch((err) => {

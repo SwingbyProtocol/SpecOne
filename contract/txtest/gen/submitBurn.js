@@ -17,18 +17,16 @@ console.log(`pubkey: ${pubkey}`)
 
 module.exports = async function (deployer, net, accounts) {
 
-    let swingby = await Swingby.deployed()
+    let sw = await Swingby.deployed()
 
-    const deposit = await swingby.deposit({
-        value: web3.toWei(44, 'ether'),
+    const ID = process.env.ID
+
+    const cancel = await sw.submitBurn(ID, {
+        value: 0,
         from: address
     })
 
-    const balance = await swingby.balanceOf(address)
-
-    console.log(balance.toNumber())
-
-    console.log(deposit.logs[0].args.value.toNumber())
+    console.log(cancel.logs)
     process.exit()
 
 }

@@ -1,6 +1,6 @@
 const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
-const Generator = artifacts.require("./Generator.sol")
+const Swingby = artifacts.require("./Swingby.sol")
 
 const mnemonic = process.env.MNEMONIC_KEY;
 
@@ -17,14 +17,14 @@ console.log(`pubkey: ${pubkey}`)
 
 module.exports = async function (deployer, net, accounts) {
 
-    let gen = await Generator.deployed()
+    let sw = await Swingby.deployed()
 
-    const balance = await gen.balanceOf(address)
+    const balance = await sw.balanceOf(address)
     console.log(balance.toNumber() / 1e18)
 
     let ID = process.env.ID
 
-    const mint = await gen.mint(ID, {
+    const mint = await sw.mint(ID, {
         value: 0,
         from: address
     })

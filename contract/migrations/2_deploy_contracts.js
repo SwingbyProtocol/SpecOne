@@ -1,35 +1,29 @@
-const Burner = artifacts.require("./Burner.sol");
+const Swingby = artifacts.require("./Swingby.sol");
 const Token = artifacts.require("./Token.sol");
-const Generator = artifacts.require("./Generator.sol")
 const ScriptVerification = artifacts.require("./ScriptVerification.sol")
 const WitnessEngine = artifacts.require("./WitnessEngine.sol")
 
 
-module.exports = function (deployer) {
+module.exports = function (deployer, network, accounts) {
 
   let sv
   let we
-  let nt
+  let sgb
   let gen
   let oracleAddress
 
   deployer.deploy(WitnessEngine).then(async () => {
     sv = await ScriptVerification.deployed()
     we = await WitnessEngine.deployed()
-    return deployer.deploy(Token, '232ss', 'STG', 18)
+    return deployer.deploy(Token, 'Swingby Token', 'SGB', 18)
   }).then(async () => {
-    nt = await Token.deployed()
+    sgb = await Token.deployed()
+    allocate = await sgb.mint(accounts[0], 20000 * 10 ** 18)
 
-    oracleAddress = "0xe17a43439b750f742c7e2d675d272ee15f8be638"
-    return deployer.deploy(Generator, oracleAddress)
-  }).then(async () => {
-    gen = await Generator.deployed()
+    oracleAddress = "0x365ebb6bb5d399ac89a20194c9a071919785beea"
+    if (network == "ropsten")
+      oracleAddress = "0xa2bd28f23A78Db41E49db7d7B64b6411123a8B85"
 
-    return deployer.deploy(Burner, sv.address, we.address, gen.address, oracleAddress)
-  }).then(async () => {
-    const burner = await Burner.deployed()
-
-    const setBurner = await gen.setBurner(burner.address)
-
+    return deployer.deploy(Swingby, sv.address, we.address, oracleAddress, sgb.address)
   })
 }

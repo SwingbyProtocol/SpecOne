@@ -1,6 +1,6 @@
 const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
-const Generator = artifacts.require("./Generator.sol")
+const Swingby = artifacts.require("./Swingby.sol")
 
 const mnemonic = process.env.MNEMONIC_KEY;
 
@@ -17,9 +17,9 @@ console.log(`pubkey: ${pubkey}`)
 
 module.exports = async function (deployer, net, accounts) {
 
-    let gen = await Generator.deployed()
+    let sw = await Swingby.deployed()
 
-    const deposit = await gen.deposit({
+    const deposit = await sw.deposit({
         value: web3.toWei('24', 'ether'),
         from: address
     })
