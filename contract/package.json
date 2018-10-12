@@ -16,7 +16,11 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "./rpcrun.bash",
+    "migrate": "truffle migrate --reset --network development",
+    "test": "truffle test",
+    "txtest": "./test.bash",
+    "compile": "truffle compile"
   },
   "author": "",
   "license": "ISC"
