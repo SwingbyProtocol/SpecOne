@@ -10,7 +10,7 @@ const WitnessEngine = artifacts.require("./WitnessEngine.sol")
  * @returns a new Swingby() instance
  */
 module.exports = async function (rootAccount) {
-    let sv, we, sgb, gen, oracleAddress, swingby
+    let sv, we, sgb, allocate, oracleAddress, swingby
     try {
         sv = await ScriptVerification.new()
         we = await WitnessEngine.new()
