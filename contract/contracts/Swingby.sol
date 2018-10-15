@@ -133,12 +133,12 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _aOfSat
+     * @dev Borrower makes an order for a BTCT loan.
+     * @param _aOfSat 必要なBTCTの量 decimals 18
      * @param _aOfWei
      * @param _interest
      * @param _period
-     * @param _rHash
+     * @param _rHash Hash of secret with which the borrower will unlock the BTC of HTLC
      * @param _pubkey
      * @return void
      */
@@ -192,11 +192,11 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
-     * @param _txId
-     * @param _rs
-     * @param _aOfSGB
+     * @dev Confirm a BTCT loan by sending locked BTC information. Executed by lender
+     * @param _orderId BTCT loan orderId
+     * @param _txId transaction ID of BTC
+     * @param _rs HTLC's redeemScript
+     * @param _aOfSGB Amount of security deposit (SGB) to be locked
      * @return void
      */
     function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _aOfSGB) public {
@@ -224,8 +224,9 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
+     * @dev Witness confirms the locked BTC
      * @dev bytes _rawTx, bytes32 _txId, bytes20 _beneficially, uint _amount, uint _fee
-     * @param _orderId
+     * @param _orderId BTCT loan orderId
      * @param _rawTx
      * @return void
      */
@@ -247,9 +248,9 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
-     * @param _sR
+     * @dev Borrower cancels their BTCT loan order
+     * @param _orderId BTCT loan orderId
+     * @param _sR secret with which the borrower will unlock the BTC of HTLC
      * @return void
      */
     function cancelOrder(uint _orderId, bytes _sR) public {
@@ -278,8 +279,8 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
+     * @dev Borrower mints BTCT
+     * @param _orderId BTCT loan orderId
      * @return void
      */
     function mint(uint _orderId) public {
@@ -301,8 +302,8 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
+     * @dev Borrower requests to burn BTCT
+     * @param _orderId BTCT loan orderId
      * @return void
      */
     function submitBurn(uint _orderId) public {
@@ -322,9 +323,9 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
-     * @param _sS
+     * @dev Lender accepts the burn request to burn BTCT
+     * @param _orderId BTCT loan orderId
+     * @param _sS secret with which the lender will send BTC in HTLC to the borrower
      * @return void
      */
     function burn(uint _orderId, bytes _sS) public {
@@ -367,8 +368,8 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
+     * @dev A Keeper liquidates the order because of the contract's time limit
+     * @param _orderId BTCT loan orderId
      * @return boolean
      */
     function liquidateByTime(uint _orderId) public returns (bool) {
@@ -384,8 +385,8 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
+     * @dev A Keeper liquidates the order because of the minimum collateral
+     * @param _orderId BTCT loan orderId
      * @return boolean
      */
     function liquidateByPrice(uint _orderId) public returns (bool) {
@@ -402,9 +403,8 @@ contract Swingby is FundManager, AddressManager, Config {
         return true;
     }
 
-    // keeper execute
     /**
-     * @dev
+     * @dev A Keeper burns BTCT
      * @param _aOfSat
      * @return void
      */
@@ -425,9 +425,9 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
-     * @param _orderId
-     * @param _sR
+     * @dev Borrower unlocks BTC in HTLC (HTLC refunds the BTC Lender)
+     * @param _orderId BTCT loan orderId
+     * @param _sR secret with which the borrower will unlock the BTC of HTLC
      * @return void
      */
     function purge(uint _orderId, bytes _sR) public {
@@ -489,7 +489,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _orderId
+     * @param _orderId BTCT loan orderId
      * @return uint
      */
     function getMaintenance(uint _orderId) public view returns (uint) {
@@ -503,7 +503,7 @@ contract Swingby is FundManager, AddressManager, Config {
     /**
      * @dev
      * @param _order
-     * @param _orderId
+     * @param _orderId BTCT loan orderId
      * @return boolean
      */
     function liquidate(Order _order, uint _orderId) internal returns (bool) {
