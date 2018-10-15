@@ -134,7 +134,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev Borrower makes an order for a BTCT loan.
-     * @param _aOfSat 必要なBTCTの量 decimals 18
+     * @param _aOfSat Requested BTCT loan amount (with 18 decimals)
      * @param _aOfWei
      * @param _interest
      * @param _period
@@ -405,7 +405,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev A Keeper burns BTCT
-     * @param _aOfSat
+     * @param _aOfSat BTCT amount (with 18 decimals)
      * @return void
      */
     function exchange(uint _aOfSat) public {
