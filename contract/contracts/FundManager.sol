@@ -88,9 +88,12 @@ contract FundManager {
         return tokenBalances[_token][_user];
     }
 
+    /**
+     * @dev
+     * @param _user
+     * @return uint
+     */
     function balanceOf(address _user) public view returns (uint) {
         return ethBalances[_user];
     }
-
-
 }
