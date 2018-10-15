@@ -28,18 +28,29 @@ contract WitnessEngine is FundManager {
     event UpdatedWitness(address _user);
     event RemovedWitness(address _user);
 
-    constructor() public { 
+    constructor() public {
         witnesses[msg.sender] = true;
         witnessCount = 1;
     }
 
+    /**
+     * @dev
+     * @param _token
+     * @return void
+     */
     function setToken(address _token) public {
         require(address(token) == 0x0);
         token = Token(_token);
     }
 
+    /**
+     * @dev
+     * @param _mode
+     * @param _user
+     * @return void
+     */
     function submitVote(uint _mode, address _user) public onlyWitness() {
-        
+
         uint256 requireBalance = 40000 * 10 ** 18;
 
         require(tokenBalances[token][_user] >= requireBalance);
@@ -56,9 +67,14 @@ contract WitnessEngine is FundManager {
 
         votes.push(vote);
     }
-    
+
+    /**
+     * @dev
+     * @param _voteId
+     * @return void
+     */
     function vote(uint _voteId) public onlyWitness() {
-       
+
         Vote storage v = votes[_voteId];
 
         require(v.startTime <= block.timestamp - 3 hours);
@@ -66,6 +82,11 @@ contract WitnessEngine is FundManager {
         v.count += 1;
     }
 
+    /**
+     * @dev
+     * @param _voteId
+     * @return void
+     */
     function exec(uint _voteId) public {
         Vote storage v = votes[_voteId];
 
@@ -82,23 +103,42 @@ contract WitnessEngine is FundManager {
         }
     }
 
+    /**
+     * @dev
+     * @param _user
+     * @return boolean
+     */
     function isWitness(address _user) public view returns (bool) {
         return witnesses[_user];
     }
 
+    /**
+     * @dev
+     * @param _user
+     * @return void
+     */
     function add(address _user) internal {
         witnesses[_user] = true;
     }
 
+    /**
+     * @dev
+     * @param _user
+     * @return vooid
+     */
     function remove(address _user) internal {
         uint amount = tokenLockedBalances[token][_user];
         tokenBalances[token][_user] += amount;
         witnesses[_user] = false;
     }
 
+    /**
+     * @dev
+     * @param _user
+     * @return vooid
+     */
     function reset(address _user) internal {
         uint amount = tokenLockedBalances[token][_user];
         tokenBalances[token][_user] += amount;
     }
 }
-
