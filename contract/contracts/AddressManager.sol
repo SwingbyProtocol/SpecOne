@@ -5,8 +5,8 @@ contract AddressManager {
 
     /**
      * @dev
-     * @param _user
-     * @param _pubkey
+     * @param _user _user
+     * @param _pubkey _pubkey
      * @return boolean
      */
     function checkUserPubkey(address _user, bytes _pubkey) public pure returns (bool) {
@@ -23,9 +23,9 @@ contract AddressManager {
 
     /**
      * @dev
-     * @param user
-     * @param publicXPoint
-     * @param publicYPoint
+     * @param user user
+     * @param publicXPoint publicXPoint
+     * @param publicYPoint publicYPoint
      * @return boolean
      */
     function checkEthPubKey(

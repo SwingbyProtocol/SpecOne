@@ -9,11 +9,11 @@ contract ScriptVerification {
 
     /**
      * @dev
-     * @param _rawTx
-     * @param _txId
-     * @param _beneficially
-     * @param _amount
-     * @param _fee
+     * @param _rawTx _rawTx
+     * @param _txId _txId
+     * @param _beneficially _beneficially
+     * @param _amount _amount
+     * @param _fee _fee
      * @return boolean
      */
     function verifyTx(
@@ -61,7 +61,7 @@ contract ScriptVerification {
 
     /**
      * @dev
-     * @param _redeemScript
+     * @param _redeemScript _redeemScript
      * @return (byptes20, bytes32)
      */
     function redeemScriptToSecretHash(bytes _redeemScript) public pure returns (bytes20, bytes32) {
@@ -97,7 +97,7 @@ contract ScriptVerification {
 
     /**
      * @dev
-     * @param str
+     * @param str str
      * @return bytes20
      */
     function hash160(bytes str) internal pure returns (bytes20) {
@@ -106,7 +106,7 @@ contract ScriptVerification {
 
     /**
      * @dev
-     * @param _sat
+     * @param _sat _sat
      * @return uint
      */
     function satToValue(uint _sat) internal pure returns (uint) {
@@ -115,9 +115,9 @@ contract ScriptVerification {
 
     /**
      * @dev
-     * @param _target
-     * @param _amount
-     * @param _fee
+     * @param _target _target
+     * @param _amount _amount
+     * @param _fee _fee
      * @return boolean
      */
     function checkValue(uint _target, uint _amount, uint _fee) internal pure returns (bool) {

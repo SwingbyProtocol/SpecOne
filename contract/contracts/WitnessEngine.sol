@@ -35,7 +35,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _token
+     * @param _token _token
      * @return void
      */
     function setToken(address _token) public {
@@ -45,8 +45,8 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _mode
-     * @param _user
+     * @param _mode _mode
+     * @param _user _user
      * @return void
      */
     function submitVote(uint _mode, address _user) public onlyWitness() {
@@ -70,7 +70,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _voteId
+     * @param _voteId _voteId
      * @return void
      */
     function vote(uint _voteId) public onlyWitness() {
@@ -84,7 +84,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _voteId
+     * @param _voteId _voteId
      * @return void
      */
     function exec(uint _voteId) public {
@@ -105,7 +105,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _user
+     * @param _user _user
      * @return boolean
      */
     function isWitness(address _user) public view returns (bool) {
@@ -114,7 +114,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _user
+     * @param _user _user
      * @return void
      */
     function add(address _user) internal {
@@ -123,7 +123,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _user
+     * @param _user _user
      * @return vooid
      */
     function remove(address _user) internal {
@@ -134,7 +134,7 @@ contract WitnessEngine is FundManager {
 
     /**
      * @dev
-     * @param _user
+     * @param _user _user
      * @return vooid
      */
     function reset(address _user) internal {

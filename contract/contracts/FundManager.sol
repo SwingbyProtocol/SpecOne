@@ -23,8 +23,8 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _token
-     * @param _value
+     * @param _token _token
+     * @param _value _value
      * @return void
      */
     function depositToken(address _token, uint256 _value) public {
@@ -39,7 +39,7 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _token
+     * @param _token _token
      * @return void
      */
     function withdrawToken(address _token) public {
@@ -80,8 +80,8 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _token
-     * @param _user
+     * @param _token _token
+     * @param _user _user
      * @return uint
      */
     function balanceOfToken(address _token, address _user) public view returns (uint) {
@@ -90,7 +90,7 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _user
+     * @param _user _user
      * @return uint
      */
     function balanceOf(address _user) public view returns (uint) {

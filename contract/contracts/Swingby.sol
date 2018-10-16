@@ -135,11 +135,11 @@ contract Swingby is FundManager, AddressManager, Config {
     /**
      * @dev Borrower makes an order for a BTCT loan.
      * @param _aOfSat Requested BTCT loan amount (with 18 decimals)
-     * @param _aOfWei
-     * @param _interest
-     * @param _period
+     * @param _aOfWei _aOfWei
+     * @param _interest _interest
+     * @param _period _period
      * @param _rHash Hash of secret with which the borrower will unlock the BTC of HTLC
-     * @param _pubkey
+     * @param _pubkey _pubkey
      * @return void
      */
     function submitOrder(
@@ -227,7 +227,7 @@ contract Swingby is FundManager, AddressManager, Config {
      * @dev Witness confirms the locked BTC
      * @dev bytes _rawTx, bytes32 _txId, bytes20 _beneficially, uint _amount, uint _fee
      * @param _orderId BTCT loan orderId
-     * @param _rawTx
+     * @param _rawTx _rawTx
      * @return void
      */
     function confirmByWitness(uint _orderId, bytes _rawTx) public {
@@ -455,7 +455,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _provider
+     * @param _provider _provider
      * @return uint
      */
     function getDebts(address _provider) public view returns (uint) {
@@ -464,7 +464,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _user
+     * @param _user _user
      * @return uint
      */
     function getLockedBalances(address _user) public view returns (uint) {
@@ -502,7 +502,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _order
+     * @param _order _order
      * @param _orderId BTCT loan orderId
      * @return boolean
      */
@@ -526,8 +526,8 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _user
-     * @param _amount
+     * @param _user _user
+     * @param _amount _amount
      * @return void
      */
     function lockSecurityDeposit(address _user, uint _amount) internal {
@@ -540,8 +540,8 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _user
-     * @param _amount
+     * @param _user _user
+     * @param _amount _amount
      * @return void
      */
     function unlockSecurityDeposit(address _user, uint _amount) internal {
@@ -554,8 +554,8 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _user
-     * @param _amount
+     * @param _user _user
+     * @param _amount _amount
      * @return void
      */
     function lockCollateralDeposit(address _user, uint _amount) internal {
@@ -568,8 +568,8 @@ contract Swingby is FundManager, AddressManager, Config {
 
     /**
      * @dev
-     * @param _user
-     * @param _amount
+     * @param _user _user
+     * @param _amount _amount
      * @return void
      */
     function unlockCollateralDeposit(address _user, uint _amount) internal {
