@@ -2,11 +2,11 @@ const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
 const Generator = artifacts.require("./Generator.sol")
 
-const mnemonic = process.env.MNEMONIC_KEY;
+const seedPhrase = process.env.SEED_PHRASE;
 
 const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
 
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonic));
+const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(seedPhrase));
 const wallet = hdwallet.derivePath(path).getWallet();
 
 const address = "0x" + wallet.getAddress().toString('hex')

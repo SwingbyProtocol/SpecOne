@@ -5,11 +5,11 @@ const Swingby = artifacts.require("./Swingby.sol")
 const bitcoin = require('bitcoinjs-lib')
 const rp = require('request-promise')
 
-const mnemonic = process.env.MNEMONICKEY;
+const seedPhrase = process.env.MNEMONICKEY;
 
 const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
 
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonic));
+const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(seedPhrase));
 const wallet = hdwallet.derivePath(path).getWallet();
 
 const address = "0x" + wallet.getAddress().toString('hex')

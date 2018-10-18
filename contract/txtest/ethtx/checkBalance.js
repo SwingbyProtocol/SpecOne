@@ -3,10 +3,10 @@ const bip39 = require("bip39")
 const Swingby = artifacts.require("./Swingby.sol")
 const Token = artifacts.require("./Token.sol")
 
-const mnemonic = process.env.MNEMONIC_KEY
+const seedPhrase = process.env.SEED_PHRASE
 const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`
 
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonic))
+const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(seedPhrase))
 const wallet = hdwallet.derivePath(path).getWallet()
 const bitcoin = require('bitcoinjs-lib')
 
