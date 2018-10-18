@@ -6,7 +6,7 @@ import "./FundManager.sol";
 contract WitnessEngine is FundManager {
 
     mapping(address => bool) public witnesses;
-    mapping(address => mapping(address => uint256)) private tokenLockedBalances;
+    mapping(address => mapping(address => uint256)) private lockedBalancesSGB;
     uint public witnessCount;
 
     struct Vote {
@@ -53,10 +53,10 @@ contract WitnessEngine is FundManager {
 
         uint256 requireBalance = 40000 * 10 ** 18;
 
-        require(tokenBalances[token][_user] >= requireBalance);
+        require(balancesToken[token][_user] >= requireBalance);
 
-        tokenBalances[token][_user] -= requireBalance;
-        tokenLockedBalances[token][_user] += requireBalance;
+        balancesToken[token][_user] -= requireBalance;
+        lockedBalancesSGB[token][_user] += requireBalance;
 
         Vote memory vote = Vote({
             mode: _mode,   // 0 => add, 1 => remove
@@ -127,8 +127,8 @@ contract WitnessEngine is FundManager {
      * @return vooid
      */
     function remove(address _user) internal {
-        uint amount = tokenLockedBalances[token][_user];
-        tokenBalances[token][_user] += amount;
+        uint amount = lockedBalancesSGB[token][_user];
+        balancesToken[token][_user] += amount;
         witnesses[_user] = false;
     }
 
@@ -138,7 +138,7 @@ contract WitnessEngine is FundManager {
      * @return vooid
      */
     function reset(address _user) internal {
-        uint amount = tokenLockedBalances[token][_user];
-        tokenBalances[token][_user] += amount;
+        uint amount = lockedBalancesSGB[token][_user];
+        balancesToken[token][_user] += amount;
     }
 }

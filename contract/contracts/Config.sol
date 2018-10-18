@@ -1,17 +1,17 @@
-pragma solidity 0.4.24; 
+pragma solidity 0.4.24;
 
 
 contract Config {
 
-    uint public feeOfSGB;
+    uint public feeSGB;
     uint public liquidationRatio;
-    uint public minSerurityDeposit;
-    uint public borrowerSeruityDeposit;
+    uint public minSecurityDepositSGB;
+    uint public borrowerSecurityDepositSGB;
 
     constructor() public {
         liquidationRatio = 140;
-        borrowerSeruityDeposit = 3000;
-        minSerurityDeposit = 3000;
+        borrowerSecurityDepositSGB = 3000;
+        minSecurityDepositSGB = 3000;
 
     }
 

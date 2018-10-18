@@ -8,7 +8,7 @@ pragma solidity 0.4.24;
 contract ERC20 {
     function totalSupply() public view returns (uint256);
 
-    function balanceOf(address _who) public view returns (uint256);
+    function balanceOfETH(address _who) public view returns (uint256);
 
     function allowance(address _owner, address _spender)
         public view returns (uint256);

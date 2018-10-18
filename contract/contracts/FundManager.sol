@@ -6,19 +6,19 @@ import "./Token.sol";
 contract FundManager {
     using SafeMath for uint256;
 
-    mapping(address => uint256) public ethBalances;
+    mapping(address => uint256) public balancesETH;
 
-    mapping(address => mapping(address => uint256)) public tokenBalances;
+    mapping(address => mapping(address => uint256)) public balancesToken;
 
-    event TokenDeposited(address token, address from, uint256 value);
-    event TokenWithdrew(address token, address to, uint256 value);
+    event DepositedToken(address token, address from, uint256 value);
+    event WithdrewToken(address token, address to, uint256 value);
 
-    event Deposited(address from, uint256 value);
-    event Withdrew(address to, uint256 value);
+    event DepositedETH(address from, uint256 value);
+    event WithdrewETH(address to, uint256 value);
 
     function () public payable {
         if (msg.value > 0)
-            deposit();
+            depositETH();
     }
 
     /**
@@ -32,9 +32,9 @@ contract FundManager {
 
         token.transferFrom(msg.sender, this, _value);
 
-        tokenBalances[_token][msg.sender] = tokenBalances[_token][msg.sender].add(_value);
+        balancesToken[_token][msg.sender] = balancesToken[_token][msg.sender].add(_value);
 
-        emit TokenDeposited(_token, msg.sender, _value);
+        emit DepositedToken(_token, msg.sender, _value);
     }
 
     /**
@@ -45,37 +45,37 @@ contract FundManager {
     function withdrawToken(address _token) public {
         Token token = Token(_token);
 
-        uint256 value = tokenBalances[_token][msg.sender];
+        uint256 value = balancesToken[_token][msg.sender];
 
-        tokenBalances[_token][msg.sender] = 0;
+        balancesToken[_token][msg.sender] = 0;
 
         require(token.transfer(msg.sender, value));
 
-        emit TokenWithdrew(_token, msg.sender, value);
+        emit WithdrewToken(_token, msg.sender, value);
     }
 
     /**
      * @dev
      * @return void
      */
-    function deposit() public payable {
-        ethBalances[msg.sender] = ethBalances[msg.sender].add(msg.value);
+    function depositETH() public payable {
+        balancesETH[msg.sender] = balancesETH[msg.sender].add(msg.value);
 
-        emit Deposited(msg.sender, msg.value);
+        emit DepositedETH(msg.sender, msg.value);
     }
 
     /**
      * @dev
      * @return  void
      */
-    function withdraw() public {
-        uint256 value = ethBalances[msg.sender];
+    function withdrawETH() public {
+        uint256 value = balancesETH[msg.sender];
 
-        ethBalances[msg.sender] = 0;
+        balancesETH[msg.sender] = 0;
 
         msg.sender.transfer(value);
 
-        emit Withdrew(msg.sender, value);
+        emit WithdrewETH(msg.sender, value);
     }
 
     /**
@@ -85,7 +85,7 @@ contract FundManager {
      * @return uint
      */
     function balanceOfToken(address _token, address _user) public view returns (uint) {
-        return tokenBalances[_token][_user];
+        return balancesToken[_token][_user];
     }
 
     /**
@@ -93,7 +93,7 @@ contract FundManager {
      * @param _user _user
      * @return uint
      */
-    function balanceOf(address _user) public view returns (uint) {
-        return ethBalances[_user];
+    function balanceOfETH(address _user) public view returns (uint) {
+        return balancesETH[_user];
     }
 }

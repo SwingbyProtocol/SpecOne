@@ -67,7 +67,7 @@ module.exports = async function (deployer, net, accounts) {
         if (error) return 0
         if (result.event == "AddedNewPrice")
             addedNewPrice(result.args)
-        if (result.event == 'Deposited')
+        if (result.event == 'DepositedETH')
             deposited(burner, result.args)
         if (result.event == 'OrderSubmitted')
             orderSubmitted(burner, result.args)
@@ -77,8 +77,8 @@ module.exports = async function (deployer, net, accounts) {
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
             attached(burner, result.args)
-        if (result.event == "TokenDeposited")
-            tokenDeposited(burner, result.args)
+        if (result.event == "DepositedToken")
+            tokenDepositedETH(burner, result.args)
         if (result.event == "BTCTBurned")
             burnExecuted(burner, result.args)
         if (result.event == "BTCTMinted")
@@ -87,8 +87,8 @@ module.exports = async function (deployer, net, accounts) {
             cancelled(burner, result.args)
         if (result.event == "Liquidated")
             liquidated(burner, result.args)
-        if (result.event == "Exchanged")
-            exchanged(burner, result.args)
+        if (result.event == "BurnedOnBehalf")
+            burnedOnBehalf(burner, result.args)
 
     })
 
@@ -96,18 +96,18 @@ module.exports = async function (deployer, net, accounts) {
 }
 
 function deposited(contract, args) {
-    log(contract, `Deposited by: ${args.from} ${args.value.toNumber() / 1e18}`)
+    log(contract, `DepositedETH by: ${args.from} ${args.value.toNumber() / 1e18}`)
     showBalance(contract, args.from, args)
 }
 
 
-function exchanged(contract, args) {
-    log(contract, `Exchanged : ${args.aOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.aOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
+function burnedOnBehalf(contract, args) {
+    log(contract, `BurnedOnBehalf : ${args.amountOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.amountOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
 }
 
 
-function tokenDeposited(contract, args) {
-    log(contract, `TokenDeposited token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
+function tokenDepositedETH(contract, args) {
+    log(contract, `DepositedToken token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
     showTokenBalance(contract, args.token, args.from)
 }
 
@@ -117,7 +117,7 @@ function addedNewPrice(contract, args) {
 
 
 async function showBalance(contract, account, args) {
-    const balance = await contract.balanceOf(account)
+    const balance = await contract.balanceOfETH(account)
     log(contract, `ETH balance in contract : ${account} ${balance.toNumber() /1e18}`)
 }
 
@@ -145,7 +145,7 @@ async function getBTCT(contract) {
 
 async function getDebts(contract, borrower) {
     const debts = await contract.getDebts(borrower);
-    log(contract, `Borrower-Debts : ${borrower} aOfSat: ${debts.toNumber() /1e18}`)
+    log(contract, `Borrower-Debts : ${borrower} amountOfSat: ${debts.toNumber() /1e18}`)
 }
 
 async function showLiquidate(contract, args) {
@@ -154,13 +154,13 @@ async function showLiquidate(contract, args) {
 }
 
 function liquidated(contract, args) {
-    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfWei: ${args.aOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}`)
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} amountOfWei: ${args.amountOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}`)
     showBalance(contract, args.borrower, args)
     showLiquidate(contract, args)
 }
 
 function orderSubmitted(contract, args) {
-    log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} aOfSat: ${args.aOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} aOfWei: ${args.aOfWei.toNumber() / 1e18}`)
+    log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} amountOfSat: ${args.amountOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} amountOfWei: ${args.amountOfWei.toNumber() / 1e18}`)
     log(contract, `OrderSubmitted pubkey: ${args.pubkey}`)
     log(contract, `OrderSubmitted rHash: ${args.rHash}`)
 
@@ -169,7 +169,7 @@ function orderSubmitted(contract, args) {
 }
 
 function cancelled(contract, args) {
-    log(contract, `OrderCancelled ID: ${args.orderId.toNumber()}, ${args.borrower} aOfSat: ${args.aOfSat.toNumber()/1e18} `)
+    log(contract, `OrderCancelled ID: ${args.orderId.toNumber()}, ${args.borrower} amountOfSat: ${args.amountOfSat.toNumber()/1e18} `)
     log(contract, `OrderCancelled sR: ${args.sR}`)
     log(contract, `OrderCancelled rHash: ${args.rHash}`)
 
@@ -188,7 +188,7 @@ function confirmedByWitness(contract, args) {
 
 function btctMinted(contract, args) {
     getBTCT(contract)
-    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
+    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} amountOfSat: ${args.amountOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
     getDebts(burner, args.borrower)
 
 }
@@ -198,7 +198,7 @@ function attached(contract, args) {
 }
 
 function burnExecuted(contract, args) {
-    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} secret: ${args.sS} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
+    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} secret: ${args.sS} amountOfSat: ${args.amountOfSat.toNumber()/1e18}`)
     getDebts(contract, args.borrower)
 }
 
@@ -231,7 +231,7 @@ let checkHTLC = function (args, isTestnet) {
         data.outputs.forEach((output) => {
             //console.log(output)
             if (output.addresses[0] === htlcAddress.address) {
-                if (output.value === args.aOfSat.toNumber() / 1e10) {
+                if (output.value === args.amountOfSat.toNumber() / 1e10) {
                     isVerified = true
                 }
             }

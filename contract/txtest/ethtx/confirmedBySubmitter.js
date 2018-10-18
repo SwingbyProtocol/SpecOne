@@ -19,7 +19,7 @@ module.exports = async function (deployer, net, accounts) {
 
     let gen = await Generator.deployed()
 
-    const balance = await gen.balanceOf(address)
+    const balance = await gen.balanceOfETH(address)
     console.log(balance.toNumber()/1e18)
 
     let ID = process.env.ID

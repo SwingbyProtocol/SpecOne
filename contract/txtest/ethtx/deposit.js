@@ -19,7 +19,7 @@ module.exports = async function (deployer, net, accounts) {
 
     let sw = await Swingby.deployed()
 
-    const deposit = await sw.deposit({
+    const deposit = await sw.depositETH({
         value: web3.toWei('24', 'ether'),
         from: address
     })

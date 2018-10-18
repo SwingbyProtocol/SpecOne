@@ -19,7 +19,7 @@ module.exports = async function (deployer, net, accounts) {
 
     let sw = await Swingby.deployed()
 
-    const balance = await sw.balanceOf(address)
+    const balance = await sw.balanceOfETH(address)
     console.log(balance.toNumber() / 1e18)
 
     let ID = process.env.ID

@@ -20,12 +20,12 @@ module.exports = async function (deployer, net, accounts) {
 
     let swingby = await Swingby.deployed()
 
-    const exchange = await swingby.exchange(web3.toWei(0.02, 'ether'), {
+    const burnOnBehalf = await swingby.burnOnBehalf(web3.toWei(0.02, 'ether'), {
         value: 0,
         from: address
     })
 
-    console.log(exchange.logs)
+    console.log(burnOnBehalf.logs)
     process.exit()
 
 }

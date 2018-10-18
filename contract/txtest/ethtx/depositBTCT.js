@@ -22,7 +22,7 @@ module.exports = async function (deployer, net, accounts) {
 
     const token = await Token.at(await swingby.getBTCT())
 
-    const tokenBlance = await token.balanceOf(address)
+    const tokenBlance = await token.balanceOfETH(address)
     console.log(tokenBlance.toNumber())
 
     const approve = await token.approve(swingby.address, web3.toWei(0.02, 'ether'))

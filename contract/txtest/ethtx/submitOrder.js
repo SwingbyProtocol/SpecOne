@@ -2,6 +2,10 @@ const hdkey = require("ethereumjs-wallet/hdkey")
 const bip39 = require("bip39");
 const Swingby = artifacts.require("./Swingby.sol")
 
+process.argv.forEach(function (val, index, array) {
+    console.log(index + ': ' + val);
+});
+
 const mnemonic = process.env.MNEMONIC_KEY;
 
 const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
@@ -17,14 +21,13 @@ console.log(`your address is: ${address}`)
 console.log(`pubkey: ${pubkey}`)
 
 module.exports = async function (deployer, net, accounts) {
-
     let sw = await Swingby.deployed()
 
-    const balance = await sw.balanceOf(address)
+    const balance = await sw.balanceOfETH(address)
     console.log(balance.toNumber() / 1e18)
 
-    let _aOfSat = 0.02 * 1e18
-    let _aOfWei = 1 * 1e18
+    let _amountOfSat = 0.02 * 1e18
+    let _amountOfWei = 1 * 1e18
     let _pubkey = pubkey
     let _interest = 1000
     // console.log(Math.floor(Date.now() / 1000))
@@ -39,8 +42,8 @@ module.exports = async function (deployer, net, accounts) {
     console.log(_rHash.toString('hex'), pubkey)
 
     const submitOrder = await sw.submitOrder(
-        _aOfSat,
-        _aOfWei,
+        _amountOfSat,
+        _amountOfWei,
         _interest,
         _period,
         '0x' + _rHash.toString('hex'),
@@ -51,5 +54,4 @@ module.exports = async function (deployer, net, accounts) {
 
     console.log(submitOrder.logs)
     process.exit()
-
 }
