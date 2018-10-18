@@ -23,8 +23,8 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _token _token
-     * @param _value _value
+     * @param _token the address of the ERC20 token
+     * @param _value the amount to deposit to this contract
      * @return void
      */
     function depositToken(address _token, uint256 _value) public {
@@ -39,7 +39,7 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _token _token
+     * @param _token the address of the ERC20 token
      * @return void
      */
     function withdrawToken(address _token) public {
@@ -80,8 +80,8 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _token _token
-     * @param _user _user
+     * @param _token the address of the ERC20 token
+     * @param _user the user address
      * @return uint
      */
     function balanceOfToken(address _token, address _user) public view returns (uint) {
@@ -90,7 +90,7 @@ contract FundManager {
 
     /**
      * @dev
-     * @param _user _user
+     * @param _user the user address
      * @return uint
      */
     function balanceOfETH(address _user) public view returns (uint) {
