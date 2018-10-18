@@ -137,8 +137,8 @@ async function getPrice(contract) {
 
 
 
-async function getBTCT(contract) {
-    const btct = await contract.getBTCT()
+async function getBtctAddress(contract) {
+    const btct = await contract.getBtctAddress()
     log(contract, `BTCT address : ${btct}`)
 }
 
@@ -187,7 +187,7 @@ function confirmedByWitness(contract, args) {
 }
 
 function btctMinted(contract, args) {
-    getBTCT(contract)
+    getBtctAddress(contract)
     log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} amountOfSat: ${args.amountOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
     getDebts(burner, args.borrower)
 

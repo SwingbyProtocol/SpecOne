@@ -472,18 +472,18 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev
+     * @dev returns the address of the token contract of BTCT
      * @return address
      */
-    function getBTCT() public view returns (address) {
+    function getBtctAddress() public view returns (address) {
         return address(btct);
     }
 
     /**
-     * @dev
+     * @dev returns the address of the token contract of SGB
      * @return address
      */
-    function getSGB() public view returns (address) {
+    function getSgbAddress() public view returns (address) {
         return address(sgb);
     }
 

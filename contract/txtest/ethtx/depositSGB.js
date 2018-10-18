@@ -20,7 +20,7 @@ module.exports = async function (callback) {
 
     let swingby = await Swingby.deployed()
 
-    const token = await Token.at(await swingby.getSGB())
+    const token = await Token.at(await swingby.getSgbAddress())
 
     const tokenBlance = await token.balanceOfETH(address)
     console.log(tokenBlance.toNumber())
