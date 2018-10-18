@@ -12,8 +12,8 @@ const wallet = hdwallet.derivePath(path).getWallet();
 const address = "0x" + wallet.getAddress().toString('hex')
 const pubkey = wallet.getPublicKeyString()
 
-console.log(`your address is: ${address}`)
-console.log(`pubkey: ${pubkey}`)
+// console.log(`your address is: ${address}`)
+// console.log(`pubkey: ${pubkey}`)
 
 module.exports = async function (callback) {
 
