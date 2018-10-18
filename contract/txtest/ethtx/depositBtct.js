@@ -1,23 +1,14 @@
-const hdkey = require("ethereumjs-wallet/hdkey")
-const bip39 = require("bip39");
-const Swingby = artifacts.require("./Swingby.sol")
-const Token = artifacts.require("./Token.sol")
+const getAddress = require('../utils/getAddress')
 
-const seedPhrase = process.env.SEED_PHRASE;
+const Swingby = artifacts.require('./Swingby.sol')
+const Token = artifacts.require('./Token.sol')
 
-const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
-
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(seedPhrase));
-const wallet = hdwallet.derivePath(path).getWallet();
-
-const address = "0x" + wallet.getAddress().toString('hex')
-const pubkey = wallet.getPublicKeyString()
-
-console.log(`your address is: ${address}`)
-console.log(`pubkey: ${pubkey}`)
+const address = getAddress()
+const arg1 = process.argv[4]
 
 module.exports = async function (callback) {
 
+    if (!arg1) return callback('Requires the amount as first argument')
     let swingby = await Swingby.deployed()
 
     const token = await Token.at(await swingby.getBtctAddress())
@@ -34,5 +25,4 @@ module.exports = async function (callback) {
 
     console.log(depositToken.logs)
     callback() // end process
-
 }

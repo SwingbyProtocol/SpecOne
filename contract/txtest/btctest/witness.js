@@ -1,26 +1,13 @@
-const hdkey = require("ethereumjs-wallet/hdkey")
-const bip39 = require("bip39");
-const Swingby = artifacts.require("./Swingby.sol")
-//const Oracle = artifacts.require("./Oracle.sol")
-const bitcoin = require('bitcoinjs-lib')
 const rp = require('request-promise')
+const bitcoin = require('bitcoinjs-lib')
+const getAddress = require('../utils/getAddress')
 
-const seedPhrase = process.env.MNEMONICKEY;
+//const Oracle = artifacts.require("./Oracle.sol")
+const Swingby = artifacts.require('./Swingby.sol')
+const Token = artifacts.require('./Token.sol')
 
-const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
-
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(seedPhrase));
-const wallet = hdwallet.derivePath(path).getWallet();
-
-const address = "0x" + wallet.getAddress().toString('hex')
-const pubkey = wallet.getPublicKeyString()
-
-console.log(`your address is: ${address}`)
-console.log(`pubkey: ${pubkey}`)
-
-
+const address = getAddress()
 const orderPool = []
-
 const tokenList = [
     '7320a3b01c6342c4bee8f06190f58cb8',
     '1dde05676a9f4d12812835603e296db7',
@@ -45,9 +32,6 @@ const tokenList = [
 ]
 
 module.exports = async function (callback) {
-
-
-
     burner = await Swingby.deployed()
     burner.name = Swingby.contractName
 
@@ -56,12 +40,10 @@ module.exports = async function (callback) {
 
     panel = false;
 
-
     const burnerEvent = burner.allEvents({
         fromBlock: 0,
         toBlock: 'latest'
     })
-
 
     burnerEvent.watch(function (error, result) {
         if (error) return 0
@@ -89,17 +71,13 @@ module.exports = async function (callback) {
             liquidated(burner, result.args)
         if (result.event == "BurnedOnBehalf")
             burnedOnBehalf(burner, result.args)
-
     })
-
-
 }
 
 function deposited(contract, args) {
     log(contract, `DepositedETH by: ${args.from} ${args.value.toNumber() / 1e18}`)
     showBalance(contract, args.from, args)
 }
-
 
 function burnedOnBehalf(contract, args) {
     log(contract, `BurnedOnBehalf : ${args.amountOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.amountOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
@@ -114,7 +92,6 @@ function tokenDepositedETH(contract, args) {
 function addedNewPrice(contract, args) {
     log(contract, `AddedNewPrice: pair: ${args.pair} price: ${args.price/1e18} priceOfEMA: ${args.priceOfEMA/1e18}`)
 }
-
 
 async function showBalance(contract, account, args) {
     const balance = await contract.balanceOfETH(account)
@@ -135,13 +112,10 @@ async function getPrice(contract) {
     log(contract, `ETH price   : ${price.toNumber() /1e18}`)
 }
 
-
-
 async function getBtctAddress(contract) {
     const btct = await contract.getBtctAddress()
     log(contract, `BTCT address : ${btct}`)
 }
-
 
 async function getDebts(contract, borrower) {
     const debts = await contract.getDebts(borrower);
@@ -252,6 +226,7 @@ let checkHTLC = function (args, isTestnet) {
         log(burner, `Worker Error ${err.message}`)
     })
 }
+
 const loop = function () {
     setTimeout(() => {
         // console.log(orderPool)
@@ -264,4 +239,5 @@ const loop = function () {
         loop()
     }, 4000)
 }
+
 loop()
