@@ -7,8 +7,13 @@ const path = `m/44'/60'/0'/0/${ACCOUNT}`
 const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(seedPhrase))
 const wallet = hdwallet.derivePath(path).getWallet()
 const address = '0x' + wallet.getAddress().toString('hex')
-// const pubkey = wallet.getPublicKeyString()
+const pubkey = wallet.getPublicKeyString()
 
-module.exports = function () {
+function getAddress () {
   return address
 }
+function getPubkey () {
+  return pubkey
+}
+
+module.exports = {getAddress, getPubkey}

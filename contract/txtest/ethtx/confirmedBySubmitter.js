@@ -1,4 +1,4 @@
-const getAddress = require('../utils/getAddress')
+const {getAddress} = require('../utils/getAddress')
 
 const Generator = artifacts.require("./Generator.sol")
 const Swingby = artifacts.require('./Swingby.sol')
