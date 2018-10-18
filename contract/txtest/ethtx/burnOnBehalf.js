@@ -7,7 +7,7 @@ const address = getAddress()
 
 module.exports = async function (callback) {
 
-    let swingby = await Swingby.deployed()
+    const swingby = await Swingby.deployed()
 
     const burnOnBehalf = await swingby.burnOnBehalf(web3.toWei(0.02, 'ether'), {
         value: 0,

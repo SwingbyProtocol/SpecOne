@@ -8,12 +8,12 @@ const address = getAddress()
 
 module.exports = async function (callback) {
 
-    let gen = await Generator.deployed()
+    const gen = await Generator.deployed()
 
     const balance = await gen.balanceOfETH(address)
     console.log(balance.toNumber()/1e18)
 
-    let ID = process.env.ID
+    const ID = process.env.ID
 
     const confirmeBySubmitter = await gen.confirmeBySubmitter(ID, {
         value: 0,

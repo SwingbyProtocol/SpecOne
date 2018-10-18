@@ -7,7 +7,7 @@ const address = getAddress()
 
 module.exports = async function (callback) {
 
-    let swingby = await Swingby.deployed()
+    const swingby = await Swingby.deployed()
 
     const ID = process.env.ID
 

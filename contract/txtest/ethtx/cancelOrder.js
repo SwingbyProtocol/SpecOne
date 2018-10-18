@@ -7,9 +7,9 @@ const address = getAddress()
 
 module.exports = async function (callback) {
 
-    let sw = await Swingby.deployed()
+    const sw = await Swingby.deployed()
 
-    let _sR = "f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
+    const _sR = "f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
     const ID = process.env.ID
 
     const cancel = await sw.cancelOrder(ID, '0x' + _sR, {

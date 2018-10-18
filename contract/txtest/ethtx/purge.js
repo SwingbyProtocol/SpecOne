@@ -7,12 +7,12 @@ const address = getAddress()
 
 module.exports = async function (callback) {
 
-    let sw = await Swingby.deployed()
+    const sw = await Swingby.deployed()
 
     const balance = await sw.balanceOfETH(address)
     console.log(balance.toNumber() / 1e18)
 
-    let ID = process.env.ID
+    const ID = process.env.ID
 
     const mint = await sw.mint(ID, {
         value: 0,

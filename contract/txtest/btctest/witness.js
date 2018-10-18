@@ -176,7 +176,7 @@ function burnExecuted(contract, args) {
     getDebts(contract, args.borrower)
 }
 
-let checkHTLC = function (args, isTestnet) {
+const checkHTLC = function (args, isTestnet) {
     let networkCypher
     let network
     if (isTestnet) {
@@ -233,7 +233,7 @@ const loop = function () {
         if (orderPool.length > 0) {
             log(burner, `Pools = ${orderPool.length}`)
             const order = orderPool.pop()
-            let isTestnet = true
+            const isTestnet = true
             checkHTLC(order, isTestnet)
         }
         loop()

@@ -9,7 +9,7 @@ const arg1 = process.argv[4]
 module.exports = async function (callback) {
 
     if (!arg1) return callback('Requires the amount as first argument')
-    let swingby = await Swingby.deployed()
+    const swingby = await Swingby.deployed()
 
     const token = await Token.at(await swingby.getBtctAddress())
 
