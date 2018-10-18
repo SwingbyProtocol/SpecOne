@@ -20,7 +20,7 @@ const pubkey = wallet.getPublicKeyString()
 console.log(`your address is: ${address}`)
 console.log(`pubkey: ${pubkey}`)
 
-module.exports = async function (deployer, net, accounts) {
+module.exports = async function (callback) {
     let sw = await Swingby.deployed()
 
     const balance = await sw.balanceOfETH(address)
@@ -53,5 +53,5 @@ module.exports = async function (deployer, net, accounts) {
         })
 
     console.log(submitOrder.logs)
-    process.exit()
+    callback() // end process
 }

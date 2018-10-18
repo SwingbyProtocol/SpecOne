@@ -25,7 +25,7 @@ const table = new Table({
     colWidths: [20, 20]
 })
 
-module.exports = async function (deployer, net, accounts) {
+module.exports = async function (callback) {
     console.log('deployer → ', deployer)
     console.log('net → ', net)
     console.log('accounts → ', accounts)
@@ -39,5 +39,5 @@ module.exports = async function (deployer, net, accounts) {
     )
     console.log(table.toString())
 
-    process.exit()
+    callback() // end process
 }

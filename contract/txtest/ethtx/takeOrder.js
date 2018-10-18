@@ -15,7 +15,7 @@ const pubkey = wallet.getPublicKeyString()
 console.log(`your address is: ${address}`)
 console.log(`pubkey: ${pubkey}`)
 
-module.exports = async function (deployer, net, accounts) {
+module.exports = async function (callback) {
 
     let gen = await Generator.deployed()
 
@@ -33,6 +33,6 @@ module.exports = async function (deployer, net, accounts) {
     })
 
     console.log(takeOrder.logs)
-    process.exit()
+    callback() // end process
 
 }

@@ -44,7 +44,7 @@ const tokenList = [
     'ebf813b67c6e49748582cfc4f93c09d6'
 ]
 
-module.exports = async function (deployer, net, accounts) {
+module.exports = async function (callback) {
 
 
 
