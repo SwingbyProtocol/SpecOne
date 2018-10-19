@@ -20,7 +20,7 @@ module.exports = function (deployer, network, accounts) {
     sgb = await Token.deployed()
     allocate = await sgb.mint(accounts[0], 20000 * 10 ** 18)
 
-    oracleAddress = "0x365ebb6bb5d399ac89a20194c9a071919785beea"
+    oracleAddress = "0xe17a43439b750f742c7e2d675d272ee15f8be638"
     if (network == "ropsten")
       oracleAddress = "0xa2bd28f23A78Db41E49db7d7B64b6411123a8B85"
 
