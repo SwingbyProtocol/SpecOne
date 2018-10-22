@@ -30,7 +30,7 @@ contract FundManager {
     function depositToken(address _token, uint256 _value) public {
         Token token = Token(_token);
 
-        token.transferFrom(msg.sender, this, _value);
+        token.transferFrom(msg.sender, address(this), _value);
 
         balancesToken[_token][msg.sender] = balancesToken[_token][msg.sender].add(_value);
 
