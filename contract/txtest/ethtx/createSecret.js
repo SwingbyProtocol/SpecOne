@@ -1,9 +1,7 @@
-const randomBytes = require('randombytes')
+const {generateSecret} = require('../utils/secret')
 
-const generateSecret = function () {
-  return randomBytes(32).toString('hex')
-}
-console.log('secret → ', generateSecret())
+const secret = generateSecret()
+console.log('New secret generated!')
+console.log(secret)
 
-module.exports = generateSecret
 process.exit()
