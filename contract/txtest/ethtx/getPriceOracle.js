@@ -8,6 +8,6 @@ const address = getAddress()
 module.exports = async function (callback) {
   const sw = await Swingby.deployed()
   const price = await sw.getPrice()
-  console.log('price → ', price / 1e18)
+  console.log('The price of ETH/BTC  → ', price / 1e18)
   callback() // end process
 }

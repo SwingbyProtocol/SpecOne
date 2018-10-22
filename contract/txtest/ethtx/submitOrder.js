@@ -11,8 +11,8 @@ const argSr = process.argv[6]
 
 module.exports = async function (callback) {
     if (!argBtct) return callback('Requires the amount as first argument')
-    if (!argEth) return callback('Requires collateral')
-    if (!argSr) return callback('Requires sR')
+    if (!argEth) return callback('Requires collateral as second argument')
+    if (!argSr) return callback('Requires a secret as third argument')
     const sw = await Swingby.deployed()
 
     const _amountOfSat = argBtct * 1e18

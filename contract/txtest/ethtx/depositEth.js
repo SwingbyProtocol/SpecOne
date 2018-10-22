@@ -13,7 +13,7 @@ module.exports = async function (callback) {
         value: web3.toWei(arg1, 'ether'),
         from: address
     })
-    console.log(deposit.tx)
+    console.log('transaction hash: ', deposit.tx)
     //console.log(deposit.logs[0].args._value.toNumber())
     callback() // end process
 }
