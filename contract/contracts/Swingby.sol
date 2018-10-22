@@ -135,7 +135,7 @@ contract Swingby is FundManager, AddressManager, Config {
     /**
      * @dev Borrower makes an order for a BTCT loan.
      * @param _amountOfSat Requested BTCT loan amount (with 18 decimals)
-     * @param _amountOfWei _amountOfWei
+     * @param _amountOfWei _amountOfWei The ETH to be used as collateral and locked in the contract
      * @param _interest _interest
      * @param _period _period
      * @param _rHash Hash of secret with which the borrower will unlock the BTC of HTLC
