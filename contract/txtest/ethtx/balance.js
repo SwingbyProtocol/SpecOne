@@ -12,10 +12,10 @@ const colors = require('colors')
 const table = new Table({
     head: [
         `Account ${process.env.ACCOUNT}`,
-        colors.magenta('Swingby balance'),
-        colors.magenta('Account balance'),
+        colors.magenta('Swingby contract deposit'),
+        colors.magenta('Wallet balance'),
     ],
-    colWidths: [15, 20, 20]
+    colWidths: [15, 26, 26]
 })
 
 module.exports = async function (callback) {
