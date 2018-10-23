@@ -15,95 +15,121 @@ npm i -g truffle@latest
 
 ### Setup environment
 
-First we'll setup our test network and compile and migrate our contracts.
+First we'll setup our test network and compile and migrate our Oracle contract.
 
 ```bash
-pwd # make sure you are in the main Swingby folder
-cd ./contract
+# Swingby
+pwd
+# make sure you are in the Swingby/contract folder
 npm run dev
+# Go to: Trusted Oracle
+pwd
+# make sure you are in the TrustedOracle/contract folder
 npm run compile
 npm run migrate
 ```
 
-First let's check the balances of the Swingby contract and users, and let's prepare some deposits.
+First, check the oracle contract's address and copy it. Then in the Swingby folder we need to paste the oracle address before deploying these contracts to the network. Then we'll migrate and compile our Swingby contracts.
+
+Go to `Swingby/contract/migrations/2_deploy_contracts.js` and paste the `oracleAddress`. Then compile & migrate like so:
 
 ```bash
-# BOB
-swingby check-balance
-# ALICE
+pwd
+# make sure you are in the Swingby/contract folder
+npm run compile
+npm run migrate
+```
+
+Then we set up a watcher for our Swingby contract.
+
+```bash
+swingby watch
+```
+
+### Mint BTCT
+
+First let's check the balances of the Swingby contract and users, and let's prepare some deposits. You can also watch the events from the watcher.
+
+```bash
+# BOB (account 0)
+swingby balance
+# ALICE (account 1)
 # to change account: -a 1
-swingby check-balance -a 1
+swingby balance -a 1
 # BOB
-swingby deposit-sgb 6000
-swingby check-balance
+swingby deposit 6000 --sgb
+swingby balance
+# BOB will also transfer 10,000 SGB to Alice:
+swingby transfer 10000 --sgb --to 1
 # ALICE
-swingby deposit-sgb 6000 -a 1
-swingby deposit-eth 24 -a 1
-swingby check-balance -a 1
+swingby deposit 6000 --sgb -a 1
+swingby deposit 24 --eth -a 1
+swingby balance -a 1
 ```
 
-Alice wants to create 0.02 BTCT. Herefor she'll need a secret phrase that Bob will use to create an HTLC. First she'll create her secret:
+Alice wants to create 0.02 BTCT. Next Alice will need to submit the order. Alice will order 0.02 BTCT so needs to calculate how much ETH collateral she'll be allocating for the creation of the BTCT. First she'll check the current BTC price through the Swingby oracle.
 
 ```bash
-# returns:
-f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5
+# add 0.02 to check the value of 0.02 BTC:
+swingby get-price-oracle 0.02
+# returns 0.02 BTC = 0.58 ETH
 ```
 
-Next Alice will need to submit the order. Alice will order 0.02 BTCT so needs to calculate how much ETH collateral she'll be allocating for the creation of the BTCT. First she'll check the current BTC price:
+She sees that the current value of 0.02 BTC is about 0.58 ETH, so she decides to go with 1 ETH collateral for her 0.02 BTCT order.
+
+She will need to pass the hash of a secret as well.
 
 ```bash
-swingby get-price-oracle
+swingby create-secret
+# returns something like '0xd29583e67a7d97d95093e0e113d4e14e130c4880f05ef23105716a1823010dd1'
 ```
 
-She sees that the current value of BTC against ETH is at 0.034. That means that 0.02 BTC would be about `0.02 / 0.034 = 0.59 ETH`. She decides to go with 1 ETH collateral for her 0.02 BTCT order. She will need to pass a secret as well.
+It's important she never shows her secret to anyone. Only show the secret's hash!
+
+Alice puts it all together in an order like so:
 
 ```bash
-swingby get-secret
-# returns 'f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5'
-# todo: cli
-```
-
-And puts it all together in an order like so:
-
-```bash
-swingby submit-order 0.02 --collateral 1 --sr 'f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5'
+swingby submit-order 0.02 -a 1 --collateral 1 --sr '0xd29583e67a7d97d95093e0e113d4e14e130c4880f05ef23105716a1823010dd1'
 ```
 
 Now we have our order registered inside Swingby and have received an order ID.
 
 Next up is Bob, he sees our order and decides to lend Alice 0.02 BTC. Bob now will need to make an HTLC with Alice's secret. For this we'll be using the mHTLC library.
 
-```bash
-node htlctest.js 'f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5'
-# todo: make sR passable
-```
-
-Now the next step is for Bob to accept the order and pass the required parameters. Some parameters are to be copied from the mHTLC script. The HTLC txId (pass as `--txid`) and the redeem script (`--rs`). Of course he'll also need Alice's order ID (`--id`) and an amount of SGB to lock up. (`--sgb`)
+He needs to retrieve the secret's hash that Alice had passed, and can see that from the events.
 
 ```bash
-swingby confirm-by-lender --id 'orderId' --txid 'txId' --rs 'redeemScript' --sgb 3000
-# todo: add extra params
+# First set the environment SEED_PHRASE
+export SEED_PHRASE='sand jump crazy forget spy ripple into clown pelican fine ride power'
+node htlctest.js 0.02 '0xd29583e67a7d97d95093e0e113d4e14e130c4880f05ef23105716a1823010dd1'
 ```
 
-Alice sees Bob's HTLC and confirms.
+Notice the redeem script that is returned. Bob will need this later on.
+
+Now the next step is for Bob to accept the order of Alice and pass the required parameters. He'll also need Alice's BTCT order ID (`--id`) and an amount of SGB to lock up (`--sgb`). Also the HTLC txId (pass as `--txid`) and the redeem script (`--rs`).
 
 ```bash
-swingby confirm-by-witness --id 'orderId' --rawtx 'rawTx'
+swingby confirm-by-lender --id 0 --lockSgb 3000 --txid 'e1662a1fbc4603fd0c657711d61bae7b9d3c4667ce34f976566d194be7ba0d0d' --rs '6304e8e3ce5bb175a820ec005aff793b2cf4c2b61fce45023eeb9274e6c18da3835aabe16484dabf858e8876a9148cba053edabfaf31c24067f2e7b7d24b7770c1ef67a820d29583e67a7d97d95093e0e113d4e14e130c4880f05ef23105716a1823010dd18876a9142f5e9b3a149467d002195d790ad513eac7496aa86888ac'
 ```
 
-Now she can mint her BTCT!
+Now if we look at our watch script the order Alice and confirmation of Bob has been registered, the events have been picked up and a witness has checked Bob's HTLC. The witness has created a transaction to confirm the HTLC and this is logged where it says "HTLC confirmed!". Here you the transaction hash of the watcher can be retrieved and Alice can go and mint her BTCT!
 
 ```bash
-swingby mint --id 'orderId'
-swingby check-balance
+swingby mint --id 0 -a 1
 ```
 
-test burning BTCT
+Finally let's check Alice's balance:
+
+```bash
+swingby balance -a 1
+```
+
+### Burn BTCT (WIP)
 
 ```bash
 swingby deposit-sgb --id 'orderId'
 swingby deposit-btct --id 'orderId'
 swingby submit-burn --id 'orderId'
 swingby burn --id 'orderId' --sS 'ntsmnt'
-swingby check-balance
+swingby balance
 ```
