@@ -13,7 +13,7 @@ const argSgb = web3.toWei(arg2, 'ether')
 const argTxid = (arg3.slice(0, 2) !== '0x')
     ? '0x' + arg3
     : arg3
-const argRs = (arg4.slice(0, 2) !== '0x')
+const argRedeemScript = (arg4.slice(0, 2) !== '0x')
     ? '0x' + arg4
     : arg4
 
@@ -22,12 +22,12 @@ module.exports = async function (callback) {
     const confirmByLender = await swingby.confirmByLender(
         argId,
         argTxid,
-        argRs,
+        argRedeemScript,
         argSgb, {
         value: 0,
         from: address
     })
 
-    console.log(confirmByLender.logs)
+    console.log('transaction hash: ', confirmByLender.logs[0].transactionHash)
     callback() // end process
 }

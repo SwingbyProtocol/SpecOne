@@ -13,6 +13,6 @@ module.exports = async function (callback) {
         from: address
     })
 
-    console.log(mint.logs)
+    console.log('transaction hash: ', mint.logs[0].transactionHash)
     callback() // end process
 }

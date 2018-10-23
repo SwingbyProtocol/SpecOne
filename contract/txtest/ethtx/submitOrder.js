@@ -4,26 +4,19 @@ const Swingby = artifacts.require('./Swingby.sol')
 const Token = artifacts.require('./Token.sol')
 
 const address = getAddress()
-const argBtct = Number(process.argv[4])
-const argEth = Number(process.argv[5])
-const argSecretHash = process.argv[6]
+const arg1 = Number(process.argv[4])
+const arg2 = Number(process.argv[5])
+const arg3 = process.argv[6]
+const argBtct = arg1
+const argEth = arg2
+const argSecretHash = (arg3.slice(0, 2) !== '0x')
+  ? '0x' + arg3
+  : arg3
 
 module.exports = async function (callback) {
-  if (!argBtct) {
-    const error = 'Requires the amount as first argument'
-    console.error(error)
-    return callback(error)
-  }
-  if (!argEth) {
-    const error = 'Requires collateral as second argument'
-    console.error(error)
-    return callback(error)
-  }
-  if (!argSecretHash) {
-    const error = 'Requires a secret hash as third argument'
-    console.error(error)
-    return callback(error)
-  }
+  if (!argBtct) return callback('Requires the amount as first argument')
+  if (!argEth) return callback('Requires collateral as second argument')
+  if (!argSecretHash) return callback('Requires a secret hash as third argument')
   const sw = await Swingby.deployed()
   const _amountOfSat = argBtct * 1e18
   const _amountOfWei = argEth * 1e18

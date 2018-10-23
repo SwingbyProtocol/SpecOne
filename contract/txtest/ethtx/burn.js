@@ -5,20 +5,19 @@ const Swingby = artifacts.require('./Swingby.sol')
 const Token = artifacts.require('./Token.sol')
 
 const address = getAddress()
+const arg1 = Number(process.argv[4])
+const argId = arg1
+const arg2 = process.argv[5]
+const argSecretHtlcLender = arg2
 
 module.exports = async function (callback) {
-
     const swingby = await Swingby.deployed()
-
-    const ID = process.env.ID
-    const secret = "0xc172d9303c8f97262c9809fcbbe2649b5be7e62ebc3c1788b60f978653257cda"
-
-    const execute = await swingby.burn(ID, secret, {
+    const burn = await swingby.burn(
+        argId,
+        argSecretHtlcLender, {
         value: 0,
         from: address
     })
-
-    console.log(execute.logs)
+    console.log('transaction hash: ', burn.logs[0].transactionHash)
     callback() // end process
-
 }
