@@ -325,7 +325,7 @@ contract Swingby is FundManager, AddressManager, Config {
     /**
      * @dev Lender accepts the burn request to burn BTCT
      * @param _orderId BTCT loan orderId
-     * @param _sS secret with which the lender will send BTC in HTLC to the borrower
+     * @param _sS The secret that the lender of BTCT used to lock BTC inside an HTLC
      * @return void
      */
     function burn(uint _orderId, bytes _sS) public {
