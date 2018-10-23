@@ -467,8 +467,26 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _user _user
      * @return uint
      */
-    function getLockedBalancesETH(address _user) public view returns (uint) {
+    function getLockedBalanceETH(address _user) public view returns (uint) {
         return lockedBalancesETH[_user];
+    }
+
+    /**
+     * @dev
+     * @param _user _user
+     * @return uint
+     */
+    function getLockedBalanceSGB(address _user) public view returns (uint) {
+        return lockedBalancesSGB[_user];
+    }
+
+    /**
+     * @dev
+     * @param _user _user
+     * @return uint
+     */
+    function getLockedBalanceBTCT(address _user) public view returns (uint) {
+        return lockedBalancesBTCT[_user];
     }
 
     /**
