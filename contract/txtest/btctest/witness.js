@@ -55,7 +55,7 @@ module.exports = async function (callback) {
             orderSubmitted(burner, result.args)
         if (result.event == 'ConfirmedByLender')
             confirmedByLender(burner, result.args)
-        if (result.event == "ConfirmedByWtitness")
+        if (result.event == "ConfirmedByWitness")
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
             attached(burner, result.args)
@@ -72,6 +72,12 @@ module.exports = async function (callback) {
         if (result.event == "BurnedOnBehalf")
             burnedOnBehalf(burner, result.args)
     })
+}
+
+function log(contract, message) {
+    // const log = `${new Date()} Contract: ${contract.address} msg: ${message} @${contract.name}`
+    const log = `${new Date().toLocaleString()} msg: ${message} @${contract.name}`
+    console.log(log)
 }
 
 function deposited(contract, args) {
@@ -101,10 +107,6 @@ async function showBalance(contract, account, args) {
 async function showTokenBalance(contract, token, account, args) {
     const balance = await contract.balanceOfToken(token, account)
     log(contract, `Token balance in contract : token: ${token} account: ${account} ${balance.toNumber()} ${balance.toNumber() /1e18}`)
-}
-
-function log(contract, message) {
-    console.log(`${new Date()} Contract: ${contract.address} msg: ${message} @${contract.name}`)
 }
 
 async function getPrice(contract) {
@@ -157,7 +159,7 @@ function confirmedByLender(contract, args) {
 }
 
 function confirmedByWitness(contract, args) {
-    log(contract, `ConfirmedByWitness ID: ${args.reqId.toNumber()} Witness: ${args.witness} verifiedTime: ${args.verifiedTime.toNumber()}`)
+    log(contract, `ConfirmedByWitness ID: ${args.orderId.toNumber()} Witness: ${args.witness}`)
 }
 
 function btctMinted(contract, args) {
@@ -203,8 +205,9 @@ const checkHTLC = function (args, isTestnet) {
         // console.log(htlcAddress.address)
         let isVerified = false
         data.outputs.forEach((output) => {
-            //console.log(output)
+            // console.log(output)
             if (output.addresses[0] === htlcAddress.address) {
+                console.log('output.value === args.amountOfSat.toNumber() / 1e10 → ', output.value === args.amountOfSat.toNumber() / 1e10)
                 if (output.value === args.amountOfSat.toNumber() / 1e10) {
                     isVerified = true
                 }
@@ -215,9 +218,9 @@ const checkHTLC = function (args, isTestnet) {
             try {
                 log(burner, `Worker Submit: OrderID: ${args.orderId.toNumber()} hex: ${'0x' + data.hex}`)
                 const confirm = await burner.confirmByWitness(args.orderId.toNumber(), '0x' + data.hex, {
-                    gas: 120000
+                    gas: 600000
                 })
-                log(burner, `Worker Submitted: OrderID: ${args.orderId.toNumber()} ${confirm.tx}`)
+                log(burner, `HTLC confirmed! OrderID: ${args.orderId.toNumber()}, transaction hash: ${confirm.tx}`)
             } catch (e) {
                 log(burner, `Worker Error: OrderID: ${args.orderId.toNumber()} VM Exception while processing transaction: revert`)
             }

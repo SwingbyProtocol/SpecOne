@@ -1,5 +1,4 @@
 const {getAddress, getPubkey} = require('../utils/address')
-const {getHash} = require('../utils/secret')
 
 const Swingby = artifacts.require('./Swingby.sol')
 const Token = artifacts.require('./Token.sol')
@@ -7,27 +6,32 @@ const Token = artifacts.require('./Token.sol')
 const address = getAddress()
 const argBtct = Number(process.argv[4])
 const argEth = Number(process.argv[5])
-const argSecret = process.argv[6]
+const argSecretHash = process.argv[6]
 
 module.exports = async function (callback) {
-  if (!argBtct) return callback('Requires the amount as first argument')
-  if (!argEth) return callback('Requires collateral as second argument')
-  if (!argSecret) return callback('Requires a secret as third argument')
+  if (!argBtct) {
+    const error = 'Requires the amount as first argument'
+    console.error(error)
+    return callback(error)
+  }
+  if (!argEth) {
+    const error = 'Requires collateral as second argument'
+    console.error(error)
+    return callback(error)
+  }
+  if (!argSecretHash) {
+    const error = 'Requires a secret hash as third argument'
+    console.error(error)
+    return callback(error)
+  }
   const sw = await Swingby.deployed()
-
   const _amountOfSat = argBtct * 1e18
   const _amountOfWei = argEth * 1e18
   const _pubkey = getPubkey()
   const _interest = 1000
   const _period = Math.floor(Date.now() / 1000) + 1200
-  const _rHash = getHash(argSecret)
+  const _rHash = argSecretHash
 
-  // console.log('_amountOfSat → ', _amountOfSat)
-  // console.log('_amountOfWei → ', _amountOfWei)
-  // console.log('_interest → ', _interest)
-  // console.log('_period → ', _period)
-  // console.log('_rHash → ', _rHash)
-  // console.log('_pubkey → ', _pubkey)
   const submitOrder = await sw.submitOrder(
     _amountOfSat,
     _amountOfWei,
