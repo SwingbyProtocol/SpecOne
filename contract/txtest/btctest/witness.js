@@ -53,8 +53,8 @@ module.exports = async function (callback) {
             deposited(burner, result.args)
         if (result.event == 'OrderSubmitted')
             orderSubmitted(burner, result.args)
-        if (result.event == 'ConfirmedByLender')
-            confirmedByLender(burner, result.args)
+        if (result.event == 'OrderConfirmed')
+            orderConfirmed(burner, result.args)
         if (result.event == "ConfirmedByWitness")
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
@@ -153,8 +153,8 @@ function cancelled(contract, args) {
     showBalance(contract, args.borrower, args)
 }
 
-function confirmedByLender(contract, args) {
-    log(contract, `ConfirmedByLender ID: ${args.orderId.toNumber()} rsHash: ${args.rsHash} sHash: ${args.sHash} txId: ${args.txId}`)
+function orderConfirmed(contract, args) {
+    log(contract, `OrderConfirmed ID: ${args.orderId.toNumber()} rsHash: ${args.rsHash} sHash: ${args.sHash} txId: ${args.txId}`)
     orderPool.push(args)
 }
 

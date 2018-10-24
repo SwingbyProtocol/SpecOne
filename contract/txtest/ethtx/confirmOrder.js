@@ -1,4 +1,5 @@
 const {getAddress} = require('../utils/address')
+const add0x = require('../utils/add0x')
 
 const Swingby = artifacts.require('./Swingby.sol')
 const Token = artifacts.require('./Token.sol')
@@ -9,17 +10,15 @@ const arg2 = Number(process.argv[5])
 const arg3 = process.argv[6]
 const arg4 = process.argv[7]
 const argId = arg1
-const argSgb = web3.toWei(arg2, 'ether')
-const argTxid = (arg3.slice(0, 2) !== '0x')
-    ? '0x' + arg3
-    : arg3
-const argRedeemScript = (arg4.slice(0, 2) !== '0x')
-    ? '0x' + arg4
-    : arg4
+const argSgb = (arg2)
+  ? web3.toWei(arg2, 'ether')
+  : web3.toWei(3000, 'ether')
+const argTxid = add0x(arg3)
+const argRedeemScript = add0x(arg4)
 
 module.exports = async function (callback) {
     const swingby = await Swingby.deployed()
-    const confirmByLender = await swingby.confirmByLender(
+    const confirmOrder = await swingby.confirmOrder(
         argId,
         argTxid,
         argRedeemScript,
@@ -28,6 +27,6 @@ module.exports = async function (callback) {
         from: address
     })
 
-    console.log('transaction hash: ', confirmByLender.logs[0].transactionHash)
+    console.log('transaction hash: ', confirmOrder.logs[0].transactionHash)
     callback() // end process
 }

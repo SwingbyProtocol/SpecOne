@@ -66,7 +66,7 @@ contract Swingby is FundManager, AddressManager, Config {
         bytes   pubkey
     );
 
-    event ConfirmedByLender(
+    event OrderConfirmed(
         uint    orderId,
         uint    amountOfSat,
         bytes20 rsHash,
@@ -192,14 +192,14 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev Confirm a BTCT loan by sending locked BTC information. Executed by lender
+     * @dev Submit the HTLC details that was created to create for a BTCT loan. Executed by lender
      * @param _orderId BTCT loan orderId
      * @param _txId transaction ID of BTC
      * @param _rs HTLC's redeemScript
      * @param _amountOfSGB Amount of security deposit (SGB) to be locked
      * @return void
      */
-    function confirmByLender(uint _orderId, bytes32 _txId, bytes _rs, uint _amountOfSGB) public {
+    function confirmOrder(uint _orderId, bytes32 _txId, bytes _rs, uint _amountOfSGB) public {
         Order storage order = orders[_orderId];
 
         bytes20 rsHash;
@@ -220,7 +220,7 @@ contract Swingby is FundManager, AddressManager, Config {
         order.txId = _txId;
         order.lender = msg.sender;
 
-        emit ConfirmedByLender(_orderId, order.amountOfSat, order.rsHash, order.sHash, _txId, _rs);
+        emit OrderConfirmed(_orderId, order.amountOfSat, order.rsHash, order.sHash, _txId, _rs);
     }
 
     /**
