@@ -9,7 +9,7 @@ const address = getAddress()
 const arg1 = Number(process.argv[4])
 const arg2 = Number(process.argv[5])
 const arg3 = process.argv[6]
-const argBtct = arg1
+let argBtct = arg1
 let argEth = arg2
 let argSecretHash = arg3
 
@@ -18,12 +18,11 @@ module.exports = async function (callback) {
   // prepare parameters
   if (!argBtct) return callback('Requires the amount as first argument')
   argBtct = argBtct * 1e18
-  if (argEth) {
-    argEth = argEth * 1e18
-  } else {
+  if (!argEth) {
     const ethValueInBTC = await sw.getPrice()
     argEth = argBtct / ethValueInBTC * 1.65
   }
+  argEth = argEth * 1e18
   if (!argSecretHash) {
     const secret = generateSecret()
     argSecretHash = getHash(secret)
