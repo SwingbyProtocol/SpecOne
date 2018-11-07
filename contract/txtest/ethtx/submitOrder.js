@@ -7,8 +7,8 @@ const Token = artifacts.require('./Token.sol')
 
 const address = getAddress()
 const arg1 = Number(process.argv[4])
-const arg2 = Number(process.argv[5])
-const arg3 = process.argv[6]
+const arg2 = Number(process.argv[7])
+const arg3 = process.argv[8]
 let argBtct = arg1
 let argEth = arg2
 let argSecretHash = arg3
@@ -49,7 +49,6 @@ module.exports = async function (callback) {
       value: 0,
       from: address
     })
-
   console.log('Order ID: ', submitOrder.logs[0].args.orderId.toString())
   callback() // end process
 }

@@ -1,5 +1,5 @@
 const bitcoin = require('bitcoinjs-lib')
-const {getAddress} = require('../utils/address')
+const {getAddress, getAccountNr} = require('../utils/address')
 
 const Swingby = artifacts.require('./Swingby.sol')
 const Token = artifacts.require('./Token.sol')
@@ -37,7 +37,7 @@ module.exports = async function (callback) {
     const SwLockedSgb = SwLockedSgb_ / 1e18
     const table = new Table({
       head: [
-        colors.red(`Account ${nr}`),
+        colors.red(`${Number(nr) === 0 ? 'BOB' : 'ALICE'}`),
         colors.magenta('Wallet balance'),
         colors.magenta('Swingby (deposit)'),
         colors.magenta('Swingby (locked)'),
@@ -52,8 +52,7 @@ module.exports = async function (callback) {
     )
     console.log(table.toString())
   }
-  await checkBalances(address, 0)
-  await checkBalances(getAddress(1), 1)
+  await checkBalances(address, getAccountNr())
 
   callback() // end process
 }

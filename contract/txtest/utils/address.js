@@ -23,4 +23,8 @@ function getPubkey (accountNr) {
   return initWallet(accountNr).pubkey
 }
 
-module.exports = {getAddress, getPubkey}
+function getAccountNr () {
+  return process.env.ACCOUNT
+}
+
+module.exports = {getAddress, getPubkey, getAccountNr}

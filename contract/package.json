@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "./rpcrun.bash",
     "compile": "truffle compile",
-    "migrate": "truffle migrate --reset --network development",
+    "migrate": "truffle migrate --reset --network testnet",
     "test": "truffle test",
     "txtest": "./test.bash",
     "watch": "truffle exec txtest/btctest/witness.js"

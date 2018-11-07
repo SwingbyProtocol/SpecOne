@@ -63,7 +63,7 @@ swingby transfer 10000 --sgb --to 1
 # ALICE
 # to change account: --account 1
 swingby deposit 6000 --sgb --account 1
-swingby deposit 24 --eth --account 1
+swingby deposit 1 --eth --account 1
 swingby balance
 ```
 
@@ -89,7 +89,8 @@ It's important she never shows her secret to anyone. Only show the secret's hash
 Alice puts it all together in an order like so:
 
 ```bash
-swingby submit-order 0.02 --account 1 --collateral 1 --sr '6fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e6120'
+swingby submit-order 0.02 --account alice
+# swingby submit-order 0.02 --account 1 --collateral 1 --sr '6fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e6120'
 swingby balance
 ```
 
@@ -110,14 +111,15 @@ Notice the redeem script that is returned. Bob will need this later on.
 Now the next step is for Bob to accept the order of Alice and pass the required parameters. He'll also need Alice's BTCT order ID (`--id`) and an amount of SGB to lock up (`--sgb`). Also the HTLC txId (pass as `--txid`) and the redeem script (`--rs`).
 
 ```bash
-swingby confirm-order --id 0 --lockSgb 3000 --txid '528b3d66fbaa637fbb68bac30e2ddc28647657d254c4a627b503f102af470a4e' --rs '6304a208cf5bb175a82001de12d560b54f0a883ec52b7ac3314b806b4dc99e7575e932862070bb46b4338876a9148cba053edabfaf31c24067f2e7b7d24b7770c1ef67a8206fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e61208876a9142f5e9b3a149467d002195d790ad513eac7496aa86888ac'
+swingby confirm-order --account bob --id 0 --txid '528b3d66fbaa637fbb68bac30e2ddc28647657d254c4a627b503f102af470a4e' --rs '6304a208cf5bb175a82001de12d560b54f0a883ec52b7ac3314b806b4dc99e7575e932862070bb46b4338876a9148cba053edabfaf31c24067f2e7b7d24b7770c1ef67a8206fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e61208876a9142f5e9b3a149467d002195d790ad513eac7496aa86888ac'
+# swingby confirm-order --account bob --id 0 --lockSgb 3000 --txid '528b3d66fbaa637fbb68bac30e2ddc28647657d254c4a627b503f102af470a4e' --rs '6304a208cf5bb175a82001de12d560b54f0a883ec52b7ac3314b806b4dc99e7575e932862070bb46b4338876a9148cba053edabfaf31c24067f2e7b7d24b7770c1ef67a8206fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e61208876a9142f5e9b3a149467d002195d790ad513eac7496aa86888ac'
 swingby balance
 ```
 
 Now if we look at our watch script the order Alice and confirmation of Bob has been registered, the events have been picked up and a witness has checked Bob's HTLC. The witness has created a transaction to confirm the HTLC and this is logged where it says "HTLC confirmed!". Here you the transaction hash of the watcher can be retrieved and Alice can go and mint her BTCT!
 
 ```bash
-swingby mint --id 0 --account 1
+swingby mint --id 0 --account alice
 ```
 
 Finally let's check Alice's balance:
@@ -129,28 +131,35 @@ swingby balance
 ### Burn BTCT (WIP)
 
 ```bash
-swingby deposit 0.02 --btct --account 1
-swingby submit-burn --id 0 --account 1
+swingby deposit 0.02 --btct --account alice
+swingby submit-burn --id 0 --account alice
 swingby balance
-swingby burn --id 0 --secret 'd04e8899bf4b0c88959c6074a5714a6974265cf2facaac4d761edf1ff479e7c7'
+swingby burn --id 0 --account bob --secret 'd04e8899bf4b0c88959c6074a5714a6974265cf2facaac4d761edf1ff479e7c7'
 swingby balance
 ```
 
+npm run migrate
+
+```
+swingby deposit 6000 --sgb
+swingby transfer 10000 --sgb --to 1
+swingby deposit 6000 --sgb --account 1
+swingby deposit 1 --eth --account 1
+```
 
 ❶ Submit an order
 ```
-swingby submit-order 0.02 --account 1
+swingby submit-order 0.02 --account alice
 ```
-  →　get secret & order id
 ❷ Create HTLC
 ```
-node htlctest.js 0.02 '6fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e6120'
+swingby mhtlc 0.02 --secret '6fd333a0402e95378a527e4028c77c71ef247770cb012bb1f9e1d68a312e6120'
 ```
 ❸ Submit the HTLC
 ```
-swingby confirm-order --id 0
+swingby confirm-order --id 0 --account bob
 ```
 ❹ Mint the BTCT
 ```
-swingby mint --id 0
+swingby mint --id 0 --account alice
 ```
