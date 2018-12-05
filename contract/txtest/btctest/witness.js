@@ -1,26 +1,13 @@
-const hdkey = require("ethereumjs-wallet/hdkey")
-const bip39 = require("bip39");
-const Swingby = artifacts.require("./Swingby.sol")
-//const Oracle = artifacts.require("./Oracle.sol")
-const bitcoin = require('bitcoinjs-lib')
 const rp = require('request-promise')
+const bitcoin = require('bitcoinjs-lib')
+const {getAddress} = require('../utils/address')
 
-const mnemonic = process.env.MNEMONICKEY;
+//const Oracle = artifacts.require("./Oracle.sol")
+const Swingby = artifacts.require('./Swingby.sol')
+const Token = artifacts.require('./Token.sol')
 
-const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
-
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonic));
-const wallet = hdwallet.derivePath(path).getWallet();
-
-const address = "0x" + wallet.getAddress().toString('hex')
-const pubkey = wallet.getPublicKeyString()
-
-console.log(`your address is: ${address}`)
-console.log(`pubkey: ${pubkey}`)
-
-
+const address = getAddress()
 const orderPool = []
-
 const tokenList = [
     '7320a3b01c6342c4bee8f06190f58cb8',
     '1dde05676a9f4d12812835603e296db7',
@@ -44,10 +31,7 @@ const tokenList = [
     'ebf813b67c6e49748582cfc4f93c09d6'
 ]
 
-module.exports = async function (deployer, net, accounts) {
-
-
-
+module.exports = async function (callback) {
     burner = await Swingby.deployed()
     burner.name = Swingby.contractName
 
@@ -56,29 +40,27 @@ module.exports = async function (deployer, net, accounts) {
 
     panel = false;
 
-
     const burnerEvent = burner.allEvents({
         fromBlock: 0,
         toBlock: 'latest'
     })
 
-
     burnerEvent.watch(function (error, result) {
         if (error) return 0
         if (result.event == "AddedNewPrice")
             addedNewPrice(result.args)
-        if (result.event == 'Deposited')
+        if (result.event == 'DepositedETH')
             deposited(burner, result.args)
         if (result.event == 'OrderSubmitted')
             orderSubmitted(burner, result.args)
-        if (result.event == 'ConfirmedByLender')
-            confirmedByLender(burner, result.args)
-        if (result.event == "ConfirmedByWtitness")
+        if (result.event == 'OrderConfirmed')
+            orderConfirmed(burner, result.args)
+        if (result.event == "ConfirmedByWitness")
             confirmedByWitness(burner, result.args)
         if (result.event == "Attached")
             attached(burner, result.args)
-        if (result.event == "TokenDeposited")
-            tokenDeposited(burner, result.args)
+        if (result.event == "DepositedToken")
+            tokenDepositedETH(burner, result.args)
         if (result.event == "BTCTBurned")
             burnExecuted(burner, result.args)
         if (result.event == "BTCTMinted")
@@ -87,27 +69,29 @@ module.exports = async function (deployer, net, accounts) {
             cancelled(burner, result.args)
         if (result.event == "Liquidated")
             liquidated(burner, result.args)
-        if (result.event == "Exchanged")
-            exchanged(burner, result.args)
-
+        if (result.event == "BurnedOnBehalf")
+            burnedOnBehalf(burner, result.args)
     })
+}
 
-
+function log(contract, message) {
+    // const log = `${new Date()} Contract: ${contract.address} msg: ${message} @${contract.name}`
+    const log = `${new Date().toLocaleString()} msg: ${message} @${contract.name}`
+    console.log(log)
 }
 
 function deposited(contract, args) {
-    log(contract, `Deposited by: ${args.from} ${args.value.toNumber() / 1e18}`)
+    log(contract, `DepositedETH by: ${args.from} ${args.value.toNumber() / 1e18}`)
     showBalance(contract, args.from, args)
 }
 
-
-function exchanged(contract, args) {
-    log(contract, `Exchanged : ${args.aOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.aOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
+function burnedOnBehalf(contract, args) {
+    log(contract, `BurnedOnBehalf : ${args.amountOfWei.toNumber()/1e18} Keeper: ${args.keeper} burnedDebts: ${args.amountOfDebt.toNumber() /1e18} remainDebts: ${args.remainDebts.toNumber() /1e18}`)
 }
 
 
-function tokenDeposited(contract, args) {
-    log(contract, `TokenDeposited token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
+function tokenDepositedETH(contract, args) {
+    log(contract, `DepositedToken token = ${args.token} ${args.from} amount: ${args.value.toNumber()} ${args.value.toNumber()/1e18}`)
     showTokenBalance(contract, args.token, args.from)
 }
 
@@ -115,9 +99,8 @@ function addedNewPrice(contract, args) {
     log(contract, `AddedNewPrice: pair: ${args.pair} price: ${args.price/1e18} priceOfEMA: ${args.priceOfEMA/1e18}`)
 }
 
-
 async function showBalance(contract, account, args) {
-    const balance = await contract.balanceOf(account)
+    const balance = await contract.balanceOfETH(account)
     log(contract, `ETH balance in contract : ${account} ${balance.toNumber() /1e18}`)
 }
 
@@ -126,26 +109,19 @@ async function showTokenBalance(contract, token, account, args) {
     log(contract, `Token balance in contract : token: ${token} account: ${account} ${balance.toNumber()} ${balance.toNumber() /1e18}`)
 }
 
-function log(contract, message) {
-    console.log(`${new Date()} Contract: ${contract.address} msg: ${message} @${contract.name}`)
-}
-
 async function getPrice(contract) {
     const price = await contract.getPrice()
     log(contract, `ETH price   : ${price.toNumber() /1e18}`)
 }
 
-
-
-async function getBTCT(contract) {
-    const btct = await contract.getBTCT()
+async function getBtctAddress(contract) {
+    const btct = await contract.getBtctAddress()
     log(contract, `BTCT address : ${btct}`)
 }
 
-
 async function getDebts(contract, borrower) {
     const debts = await contract.getDebts(borrower);
-    log(contract, `Borrower-Debts : ${borrower} aOfSat: ${debts.toNumber() /1e18}`)
+    log(contract, `Borrower-Debts : ${borrower} amountOfSat: ${debts.toNumber() /1e18}`)
 }
 
 async function showLiquidate(contract, args) {
@@ -154,13 +130,13 @@ async function showLiquidate(contract, args) {
 }
 
 function liquidated(contract, args) {
-    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} aOfWei: ${args.aOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}`)
+    log(contract, `Liquidated ID: ${args.orderId.toNumber()}, ${args.borrower} amountOfWei: ${args.amountOfWei.toNumber()/1e18} time: ${args.liquidatedTime.toNumber()}`)
     showBalance(contract, args.borrower, args)
     showLiquidate(contract, args)
 }
 
 function orderSubmitted(contract, args) {
-    log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} aOfSat: ${args.aOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} aOfWei: ${args.aOfWei.toNumber() / 1e18}`)
+    log(contract, `OrderSubmitted ID: ${args.orderId.toNumber()}, ${args.user} amountOfSat: ${args.amountOfSat.toNumber()/1e18} minLock =: ${args.mLockAmount.toNumber() /1e18} amountOfWei: ${args.amountOfWei.toNumber() / 1e18}`)
     log(contract, `OrderSubmitted pubkey: ${args.pubkey}`)
     log(contract, `OrderSubmitted rHash: ${args.rHash}`)
 
@@ -169,7 +145,7 @@ function orderSubmitted(contract, args) {
 }
 
 function cancelled(contract, args) {
-    log(contract, `OrderCancelled ID: ${args.orderId.toNumber()}, ${args.borrower} aOfSat: ${args.aOfSat.toNumber()/1e18} `)
+    log(contract, `OrderCancelled ID: ${args.orderId.toNumber()}, ${args.borrower} amountOfSat: ${args.amountOfSat.toNumber()/1e18} `)
     log(contract, `OrderCancelled sR: ${args.sR}`)
     log(contract, `OrderCancelled rHash: ${args.rHash}`)
 
@@ -177,18 +153,18 @@ function cancelled(contract, args) {
     showBalance(contract, args.borrower, args)
 }
 
-function confirmedByLender(contract, args) {
-    log(contract, `ConfirmedByLender ID: ${args.orderId.toNumber()} rsHash: ${args.rsHash} sHash: ${args.sHash} txId: ${args.txId}`)
+function orderConfirmed(contract, args) {
+    log(contract, `OrderConfirmed ID: ${args.orderId.toNumber()} rsHash: ${args.rsHash} sHash: ${args.sHash} txId: ${args.txId}`)
     orderPool.push(args)
 }
 
 function confirmedByWitness(contract, args) {
-    log(contract, `ConfirmedByWitness ID: ${args.reqId.toNumber()} Witness: ${args.witness} verifiedTime: ${args.verifiedTime.toNumber()}`)
+    log(contract, `ConfirmedByWitness ID: ${args.orderId.toNumber()} Witness: ${args.witness}`)
 }
 
 function btctMinted(contract, args) {
-    getBTCT(contract)
-    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} aOfSat: ${args.aOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
+    getBtctAddress(contract)
+    log(contract, `BTCTMinted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} amountOfSat: ${args.amountOfSat.toNumber() /1e18} Period: ${args.period.toNumber()}`)
     getDebts(burner, args.borrower)
 
 }
@@ -198,11 +174,11 @@ function attached(contract, args) {
 }
 
 function burnExecuted(contract, args) {
-    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} secret: ${args.sS} aOfSat: ${args.aOfSat.toNumber()/1e18}`)
+    log(contract, `BurnExecuted ID: ${args.orderId.toNumber()} borrower: ${args.borrower} secret: ${args.sS} amountOfSat: ${args.amountOfSat.toNumber()/1e18}`)
     getDebts(contract, args.borrower)
 }
 
-let checkHTLC = function (args, isTestnet) {
+const checkHTLC = function (args, isTestnet) {
     let networkCypher
     let network
     if (isTestnet) {
@@ -229,9 +205,10 @@ let checkHTLC = function (args, isTestnet) {
         // console.log(htlcAddress.address)
         let isVerified = false
         data.outputs.forEach((output) => {
-            //console.log(output)
+            // console.log(output)
             if (output.addresses[0] === htlcAddress.address) {
-                if (output.value === args.aOfSat.toNumber() / 1e10) {
+                console.log('output.value === args.amountOfSat.toNumber() / 1e10 → ', output.value === args.amountOfSat.toNumber() / 1e10)
+                if (output.value === args.amountOfSat.toNumber() / 1e10) {
                     isVerified = true
                 }
             }
@@ -241,9 +218,9 @@ let checkHTLC = function (args, isTestnet) {
             try {
                 log(burner, `Worker Submit: OrderID: ${args.orderId.toNumber()} hex: ${'0x' + data.hex}`)
                 const confirm = await burner.confirmByWitness(args.orderId.toNumber(), '0x' + data.hex, {
-                    gas: 120000
+                    gas: 600000
                 })
-                log(burner, `Worker Submitted: OrderID: ${args.orderId.toNumber()} ${confirm.tx}`)
+                log(burner, `HTLC confirmed! OrderID: ${args.orderId.toNumber()}, transaction hash: ${confirm.tx}`)
             } catch (e) {
                 log(burner, `Worker Error: OrderID: ${args.orderId.toNumber()} VM Exception while processing transaction: revert`)
             }
@@ -252,16 +229,18 @@ let checkHTLC = function (args, isTestnet) {
         log(burner, `Worker Error ${err.message}`)
     })
 }
+
 const loop = function () {
     setTimeout(() => {
         // console.log(orderPool)
         if (orderPool.length > 0) {
             log(burner, `Pools = ${orderPool.length}`)
             const order = orderPool.pop()
-            let isTestnet = true
+            const isTestnet = true
             checkHTLC(order, isTestnet)
         }
         loop()
     }, 4000)
 }
+
 loop()

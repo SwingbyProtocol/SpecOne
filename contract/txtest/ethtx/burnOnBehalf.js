@@ -9,16 +9,12 @@ module.exports = async function (callback) {
 
     const swingby = await Swingby.deployed()
 
-    const ID = process.env.ID
-
-    const rate = await swingby.getMaintenance(ID)
-
-    console.log(rate.toNumber() / 1e18, "%")
-
-    const liquidateByPrice = await swingby.liquidateByPrice(ID, {
+    const burnOnBehalf = await swingby.burnOnBehalf(web3.toWei(0.02, 'ether'), {
         value: 0,
         from: address
     })
+
+    console.log(burnOnBehalf.logs)
     callback() // end process
 
 }

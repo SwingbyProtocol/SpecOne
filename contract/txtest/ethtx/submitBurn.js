@@ -1,32 +1,19 @@
-const hdkey = require("ethereumjs-wallet/hdkey")
-const bip39 = require("bip39");
-const Swingby = artifacts.require("./Swingby.sol")
+const {getAddress} = require('../utils/address')
 
-const mnemonic = process.env.MNEMONIC_KEY;
+const Swingby = artifacts.require('./Swingby.sol')
+const Token = artifacts.require('./Token.sol')
 
-const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
+const address = getAddress()
+const arg1 = Number(process.argv[4])
+const argId = arg1
 
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonic));
-const wallet = hdwallet.derivePath(path).getWallet();
-
-const address = "0x" + wallet.getAddress().toString('hex')
-const pubkey = wallet.getPublicKeyString()
-
-console.log(`your address is: ${address}`)
-console.log(`pubkey: ${pubkey}`)
-
-module.exports = async function (deployer, net, accounts) {
-
-    let sw = await Swingby.deployed()
-
-    const ID = process.env.ID
-
-    const cancel = await sw.submitBurn(ID, {
+module.exports = async function (callback) {
+    const sw = await Swingby.deployed()
+    const burnRequest = await sw.submitBurn(
+        argId, {
         value: 0,
         from: address
     })
-
-    console.log(cancel.logs)
-    process.exit()
-
+    console.log('transaction hash: ', burnRequest.logs[0].transactionHash)
+    callback() // end process
 }

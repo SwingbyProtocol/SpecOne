@@ -1,55 +1,54 @@
-const hdkey = require("ethereumjs-wallet/hdkey")
-const bip39 = require("bip39");
-const Swingby = artifacts.require("./Swingby.sol")
+const {getAddress, getPubkey} = require('../utils/address')
+const add0x = require('../utils/add0x')
+const {generateSecret, getHash} = require('../utils/secret')
 
-const mnemonic = process.env.MNEMONIC_KEY;
+const Swingby = artifacts.require('./Swingby.sol')
+const Token = artifacts.require('./Token.sol')
 
-const path = `m/44'/60'/0'/0/${process.env.ACCOUNT}`;
+const address = getAddress()
+const arg1 = Number(process.argv[4])
+const arg2 = Number(process.argv[7])
+const arg3 = process.argv[8]
+let argBtct = arg1
+let argEth = arg2
+let argSecretHash = arg3
 
-const hdwallet = hdkey.fromMasterSeed(bip39.mnemonicToSeed(mnemonic));
-const wallet = hdwallet.derivePath(path).getWallet();
-const bitcoin = require('bitcoinjs-lib')
+module.exports = async function (callback) {
+  const sw = await Swingby.deployed()
+  // prepare parameters
+  if (!argBtct) return callback('Requires the amount as first argument')
+  argBtct = argBtct * 1e18
+  if (!argEth) {
+    const ethValueInBTC = await sw.getPrice()
+    argEth = argBtct / ethValueInBTC * 1.65
+  }
+  argEth = argEth * 1e18
+  if (!argSecretHash) {
+    const secret = generateSecret()
+    argSecretHash = getHash(secret)
+    console.log(`New secret generated!
+      secret: ${secret}
+      hash  : ${argSecretHash}
+    `)
+  }
+  argSecretHash = add0x(argSecretHash)
+  const _amountOfSat = argBtct
+  const _amountOfWei = argEth
+  const _pubkey = getPubkey()
+  const _interest = 1000
+  const _period = Math.floor(Date.now() / 1000) + 1200
+  const _rHash = argSecretHash
 
-const address = "0x" + wallet.getAddress().toString('hex')
-const pubkey = wallet.getPublicKeyString()
-
-console.log(`your address is: ${address}`)
-console.log(`pubkey: ${pubkey}`)
-
-module.exports = async function (deployer, net, accounts) {
-
-    let sw = await Swingby.deployed()
-
-    const balance = await sw.balanceOf(address)
-    console.log(balance.toNumber() / 1e18)
-
-    let _aOfSat = 0.02 * 1e18
-    let _aOfWei = 1 * 1e18
-    let _pubkey = pubkey
-    let _interest = 1000
-    // console.log(Math.floor(Date.now() / 1000))
-    let _period = Math.floor(Date.now() / 1000) + 1200
-
-    let _sR = "f0f9862aeb53fb6bd587fa22d9e6705ca5c5c0ab2af67bba5042f2dc16d536e5"
-
-    let buf = new Buffer(_sR, 'hex');
-
-    let _rHash = bitcoin.crypto.sha256(buf)
-
-    console.log(_rHash.toString('hex'), pubkey)
-
-    const submitOrder = await sw.submitOrder(
-        _aOfSat,
-        _aOfWei,
-        _interest,
-        _period,
-        '0x' + _rHash.toString('hex'),
-        _pubkey, {
-            value: 0,
-            from: address
-        })
-
-    console.log(submitOrder.logs)
-    process.exit()
-
+  const submitOrder = await sw.submitOrder(
+    _amountOfSat,
+    _amountOfWei,
+    _interest,
+    _period,
+    _rHash,
+    _pubkey, {
+      value: 0,
+      from: address
+    })
+  console.log('Order ID: ', submitOrder.logs[0].args.orderId.toString())
+  callback() // end process
 }
