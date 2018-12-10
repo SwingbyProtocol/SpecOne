@@ -9,10 +9,10 @@ contract Config {
     uint public borrowerSecurityDepositSGB;
 
     constructor() public {
-        liquidationRatio = 140;
+        liquidationRatio = 150;
         borrowerSecurityDepositSGB = 3000;
         minSecurityDepositSGB = 3000;
-
+        feeSGB = 0;
     }
 
 }

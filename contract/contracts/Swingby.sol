@@ -277,6 +277,19 @@ contract Swingby is FundManager, AddressManager, Config {
 
         emit Cancelled(_orderId, order.borrower, _sR, sha256(_sR), order.amountOfSat);
     }
+    
+
+    function addCollateral(uint _orderId, uint _aOfWei) public {
+
+        Order storage order = orders[_orderId];
+
+        require(msg.sender == order.borrower);
+
+        lockCollateralDeposit(msg.sender, _aOfWei);
+
+        order.aOfWei = order.aOfWei + _aOfWei;
+
+    }
 
     /**
      * @dev Borrower mints BTCT
