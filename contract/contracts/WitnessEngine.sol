@@ -39,7 +39,7 @@ contract WitnessEngine is FundManager {
      * @return void
      */
     function setToken(address _token) public {
-        require(address(token) == 0x0);
+        require(address(token) == address(0x0));
         token = Token(_token);
     }
 
@@ -53,10 +53,10 @@ contract WitnessEngine is FundManager {
 
         uint256 requireBalance = 40000 * 10 ** 18;
 
-        require(balancesToken[token][_user] >= requireBalance);
+        require(balancesToken[address(token)][_user] >= requireBalance);
 
-        balancesToken[token][_user] -= requireBalance;
-        lockedBalancesSGB[token][_user] += requireBalance;
+        balancesToken[address(token)][_user] -= requireBalance;
+        lockedBalancesSGB[address(token)][_user] += requireBalance;
 
         Vote memory vote = Vote({
             mode: _mode,   // 0 => add, 1 => remove
@@ -127,8 +127,8 @@ contract WitnessEngine is FundManager {
      * @return vooid
      */
     function remove(address _user) internal {
-        uint amount = lockedBalancesSGB[token][_user];
-        balancesToken[token][_user] += amount;
+        uint amount = lockedBalancesSGB[address(token)][_user];
+        balancesToken[address(token)][_user] += amount;
         witnesses[_user] = false;
     }
 
@@ -138,7 +138,7 @@ contract WitnessEngine is FundManager {
      * @return vooid
      */
     function reset(address _user) internal {
-        uint amount = lockedBalancesSGB[token][_user];
-        balancesToken[token][_user] += amount;
+        uint amount = lockedBalancesSGB[address(token)][_user];
+        balancesToken[address(token)][_user] += amount;
     }
 }
