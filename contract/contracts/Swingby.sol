@@ -315,7 +315,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
         lockCollateralDeposit(msg.sender, _amountOfWei);
 
-        order.aOfWei = order.aOfWei + _amountOfWei;
+        order.amountOfWei = order.amountOfWei + _amountOfWei;
     }
 
     /**
