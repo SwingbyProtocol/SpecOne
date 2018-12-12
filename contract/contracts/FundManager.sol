@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 import "./Token.sol";
 
@@ -16,7 +16,7 @@ contract FundManager {
     event DepositedETH(address from, uint256 value);
     event WithdrewETH(address to, uint256 value);
 
-    function () public payable {
+    function () external payable {
         if (msg.value > 0)
             depositETH();
     }

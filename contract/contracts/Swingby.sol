@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 import "./ScriptVerification.sol";
 import "./AddressManager.sol";
@@ -317,7 +317,6 @@ contract Swingby is FundManager, AddressManager, Config {
 
         order.aOfWei = order.aOfWei + _amountOfWei;
     }
-
 
     /**
      * @dev Borrower requests to burn BTCT
