@@ -231,7 +231,6 @@ contract Swingby is FundManager, AddressManager, Config {
      * @return void
      */
     function confirmByWitness(uint _orderId, bytes _rawTx) public {
-
         Order storage order = orders[_orderId];
 
         require(order.lender != 0x0);
@@ -277,18 +276,21 @@ contract Swingby is FundManager, AddressManager, Config {
 
         emit Cancelled(_orderId, order.borrower, _sR, sha256(_sR), order.amountOfSat);
     }
-    
 
-    function addCollateral(uint _orderId, uint _aOfWei) public {
-
+    /**
+     * @dev Add ETH collateral to your BTCT loan order
+     * @param _orderId BTCT loan orderId
+     * @param _amountOfWei the amount to add as collateral
+     * @return void
+     */
+    function addCollateral(uint _orderId, uint _amountOfWei) public {
         Order storage order = orders[_orderId];
 
         require(msg.sender == order.borrower);
 
-        lockCollateralDeposit(msg.sender, _aOfWei);
+        lockCollateralDeposit(msg.sender, _amountOfWei);
 
-        order.aOfWei = order.aOfWei + _aOfWei;
-
+        order.aOfWei = order.aOfWei + _amountOfWei;
     }
 
     /**
