@@ -278,22 +278,6 @@ contract Swingby is FundManager, AddressManager, Config {
     }
 
     /**
-     * @dev Add ETH collateral to your BTCT loan order
-     * @param _orderId BTCT loan orderId
-     * @param _amountOfWei the amount to add as collateral
-     * @return void
-     */
-    function addCollateral(uint _orderId, uint _amountOfWei) public {
-        Order storage order = orders[_orderId];
-
-        require(msg.sender == order.borrower);
-
-        lockCollateralDeposit(msg.sender, _amountOfWei);
-
-        order.aOfWei = order.aOfWei + _amountOfWei;
-    }
-
-    /**
      * @dev Borrower mints BTCT
      * @param _orderId BTCT loan orderId
      * @return void
@@ -315,6 +299,25 @@ contract Swingby is FundManager, AddressManager, Config {
 
         emit BTCTMinted(_orderId, order.borrower, order.amountOfSat, order.period);
     }
+
+    /**
+     * @dev Add ETH collateral to your BTCT loan order
+     * @param _orderId BTCT loan orderId
+     * @param _amountOfWei the amount to add as collateral
+     * @return void
+     */
+    function addCollateral(uint _orderId, uint _amountOfWei) public {
+        Order storage order = orders[_orderId];
+
+        require(msg.sender == order.borrower);
+
+        require(order.status == Status.minted);
+
+        lockCollateralDeposit(msg.sender, _amountOfWei);
+
+        order.aOfWei = order.aOfWei + _amountOfWei;
+    }
+
 
     /**
      * @dev Borrower requests to burn BTCT
