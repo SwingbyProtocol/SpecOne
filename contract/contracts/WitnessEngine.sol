@@ -1,9 +1,11 @@
 pragma solidity 0.4.24;
 
 import "./FundManager.sol";
+import "./SafeMath.sol";
 
 
 contract WitnessEngine is FundManager {
+    using SafeMath for uint256;
 
     mapping(address => bool) public witnesses;
     mapping(address => mapping(address => uint256)) private lockedBalancesSGB;
@@ -55,8 +57,8 @@ contract WitnessEngine is FundManager {
 
         require(balancesToken[token][_user] >= requireBalance);
 
-        balancesToken[token][_user] -= requireBalance;
-        lockedBalancesSGB[token][_user] += requireBalance;
+        balancesToken[token][_user] = balancesToken[token][_user].sub(requireBalance);
+        lockedBalancesSGB[token][_user] = lockedBalancesSGB[token][_user].add(requireBalance);
 
         Vote memory vote = Vote({
             mode: _mode,   // 0 => add, 1 => remove
@@ -79,7 +81,7 @@ contract WitnessEngine is FundManager {
 
         require(v.startTime <= block.timestamp - 3 hours);
 
-        v.count += 1;
+        v.count = v.count.add(1);
     }
 
     /**
@@ -128,7 +130,7 @@ contract WitnessEngine is FundManager {
      */
     function remove(address _user) internal {
         uint amount = lockedBalancesSGB[token][_user];
-        balancesToken[token][_user] += amount;
+        balancesToken[token][_user] = balancesToken[token][_user].add(amount);
         witnesses[_user] = false;
     }
 
@@ -139,6 +141,6 @@ contract WitnessEngine is FundManager {
      */
     function reset(address _user) internal {
         uint amount = lockedBalancesSGB[token][_user];
-        balancesToken[token][_user] += amount;
+        balancesToken[token][_user] = balancesToken[token][_user].add(amount);
     }
 }

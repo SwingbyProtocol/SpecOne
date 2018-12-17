@@ -6,9 +6,11 @@ import "./FundManager.sol";
 import "./WitnessEngine.sol";
 import "./TrustedOracleInterface.sol";
 import "./Config.sol";
+import "./SafeMath.sol";
 
 
 contract Swingby is FundManager, AddressManager, Config {
+    using SafeMath for uint256;
 
     mapping (address => uint256) private lockedBalancesETH;
     mapping (address => uint256) private lockedBalancesSGB;
@@ -289,7 +291,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
         require(order.status == Status.verified);
 
-        debts[order.borrower] += order.amountOfSat;
+        debts[order.borrower] = debts[order.borrower].add(order.amountOfSat);
 
         btct.mint(order.borrower, order.amountOfSat);
 
@@ -331,9 +333,9 @@ contract Swingby is FundManager, AddressManager, Config {
 
         require(balanceOfToken(btct, order.borrower) >= order.amountOfSat);
 
-        balancesToken[btct][order.borrower] -= order.amountOfSat;
+        balancesToken[btct][order.borrower] = balancesToken[btct][order.borrower].sub(order.amountOfSat);
 
-        lockedBalancesBTCT[order.borrower] += order.amountOfSat;
+        lockedBalancesBTCT[order.borrower] = lockedBalancesBTCT[order.borrower].add(order.amountOfSat);
 
         order.status = Status.burning;
 
@@ -354,12 +356,12 @@ contract Swingby is FundManager, AddressManager, Config {
         //require(order.sHash == sha256(_sS));   // BTC send to borrower from lender
 
         if (debts[order.borrower] >= order.amountOfSat) {
-            debts[order.borrower] -= order.amountOfSat;
+            debts[order.borrower] = debts[order.borrower].sub(order.amountOfSat);
         } else if (debts[order.borrower] < order.amountOfSat) {
             debts[order.borrower] = 0;
         }
 
-        lockedBalancesBTCT[order.borrower] -= order.amountOfSat;
+        lockedBalancesBTCT[order.borrower] = lockedBalancesBTCT[order.borrower].sub(order.amountOfSat);
 
         btct.burn(order.amountOfSat);
 
@@ -370,15 +372,15 @@ contract Swingby is FundManager, AddressManager, Config {
         unlockSecurityDeposit(order.lender, order.amountOfSGB);
 
         // send fees to lender
-        balancesToken[sgb][order.borrower] -= feeSGB * multiplexer;
-        balancesToken[sgb][order.lender] += feeSGB * multiplexer;
+        balancesToken[sgb][order.borrower] = balancesToken[sgb][order.borrower].sub(feeSGB.mul(multiplexer));
+        balancesToken[sgb][order.lender] = balancesToken[sgb][order.lender].add(feeSGB.mul(multiplexer));
 
         uint amountOfInterest = (order.period - order.sTime) / 365 days * order.interest;
         uint amountOfETH = 1 * 10 ** 18 * (order.amountOfSat * 100 / getPrice()) / 100;
 
         // send value and interest to lender
-        balancesETH[order.borrower] -= (amountOfETH + amountOfInterest);
-        balancesETH[order.lender] += (amountOfETH + amountOfInterest);
+        balancesETH[order.borrower] = balancesETH[order.borrower].sub((amountOfETH.add(amountOfInterest)));
+        balancesETH[order.lender] = balancesETH[order.lender].add((amountOfETH.add(amountOfInterest)));
 
         order.status = Status.closed;
 
@@ -429,9 +431,9 @@ contract Swingby is FundManager, AddressManager, Config {
     function burnOnBehalf(uint _amountOfSat) public {
         require(balanceOfToken(btct, msg.sender) >= _amountOfSat);
 
-        balancesToken[btct][msg.sender] -= _amountOfSat;
+        balancesToken[btct][msg.sender] = balancesToken[btct][msg.sender].sub(_amountOfSat);
 
-        debtPool -= _amountOfSat;
+        debtPool = debtPool.sub(_amountOfSat);
 
         btct.burn(_amountOfSat);
 
@@ -455,7 +457,7 @@ contract Swingby is FundManager, AddressManager, Config {
 
         require(sha256(_sR) == order.rHash);
 
-        balancesETH[order.borrower] += lockedRefundBalancesETH[_orderId];
+        balancesETH[order.borrower] = balancesETH[order.borrower].add(lockedRefundBalancesETH[_orderId]);
 
         lockedRefundBalancesETH[_orderId] = 0;
 
@@ -547,13 +549,13 @@ contract Swingby is FundManager, AddressManager, Config {
 
         unlockSecurityDeposit(_order.borrower, borrowerSecurityDepositSGB * multiplexer);
 
-        balancesETH[_order.borrower] -= _order.amountOfWei;
+        balancesETH[_order.borrower] = balancesETH[_order.borrower].sub(_order.amountOfWei);
 
         uint amountOfRefundLock = 1 * 10 ** 18 * (_order.amountOfSat * 25 / getPrice()) / 100;
 
-        lockedRefundBalancesETH[_orderId] += amountOfRefundLock;
+        lockedRefundBalancesETH[_orderId] = lockedRefundBalancesETH[_orderId].add(amountOfRefundLock);
 
-        debtPool += _order.amountOfSat;
+        debtPool = debtPool.add(_order.amountOfSat);
 
         _order.status = Status.liquidated;
 
@@ -569,9 +571,9 @@ contract Swingby is FundManager, AddressManager, Config {
     function lockSecurityDeposit(address _user, uint _amount) internal {
         require(balanceOfToken(sgb, _user) >= _amount);
 
-        balancesToken[sgb][_user] -= _amount;
+        balancesToken[sgb][_user] = balancesToken[sgb][_user].sub(_amount);
 
-        lockedBalancesSGB[_user] += _amount;
+        lockedBalancesSGB[_user] = lockedBalancesSGB[_user].add(_amount);
     }
 
     /**
@@ -583,9 +585,9 @@ contract Swingby is FundManager, AddressManager, Config {
     function unlockSecurityDeposit(address _user, uint _amount) internal {
         require(lockedBalancesSGB[_user] >= _amount);
 
-        balancesToken[sgb][_user] += _amount;
+        balancesToken[sgb][_user] = balancesToken[sgb][_user].add(_amount);
 
-        lockedBalancesSGB[_user] -= _amount;
+        lockedBalancesSGB[_user] = lockedBalancesSGB[_user].sub(_amount);
     }
 
     /**
@@ -597,9 +599,9 @@ contract Swingby is FundManager, AddressManager, Config {
     function lockCollateralDeposit(address _user, uint _amount) internal {
         require(balanceOfETH(_user) >= _amount);
 
-        balancesETH[_user] -= _amount;
+        balancesETH[_user] = balancesETH[_user].sub(_amount);
 
-        lockedBalancesETH[_user] += _amount;
+        lockedBalancesETH[_user] = lockedBalancesETH[_user].add(_amount);
     }
 
     /**
@@ -611,8 +613,8 @@ contract Swingby is FundManager, AddressManager, Config {
     function unlockCollateralDeposit(address _user, uint _amount) internal {
         require(lockedBalancesETH[_user] >= _amount);
 
-        balancesETH[_user] += _amount;
+        balancesETH[_user] = balancesETH[_user].add(_amount);
 
-        lockedBalancesETH[_user] -= _amount;
+        lockedBalancesETH[_user] = lockedBalancesETH[_user].sub(_amount);
     }
 }
