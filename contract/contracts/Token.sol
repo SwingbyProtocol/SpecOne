@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 import "./StandardToken.sol";
 import "./Ownable.sol";
@@ -26,7 +26,7 @@ contract Token is StandardToken, Ownable {
         _;
     }
 
-    constructor(string _name, string _symbol, uint8 _decimals) public {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) public {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;

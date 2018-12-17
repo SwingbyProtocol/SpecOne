@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 
 contract AddressManager {
@@ -9,7 +9,7 @@ contract AddressManager {
      * @param _pubkey _pubkey
      * @return boolean
      */
-    function checkUserPubkey(address _user, bytes _pubkey) public pure returns (bool) {
+    function checkUserPubkey(address _user, bytes memory _pubkey) public pure returns (bool) {
         bytes32 pointX;
         bytes32 pointY;
 

@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 import "./FundManager.sol";
 import "./SafeMath.sol";
@@ -41,7 +41,7 @@ contract WitnessEngine is FundManager {
      * @return void
      */
     function setToken(address _token) public {
-        require(address(token) == 0x0);
+        require(address(token) == address(0x0));
         token = Token(_token);
     }
 
@@ -55,7 +55,7 @@ contract WitnessEngine is FundManager {
 
         uint256 requireBalance = 40000 * 10 ** 18;
 
-        require(balancesToken[token][_user] >= requireBalance);
+        require(balancesToken[address(token)][_user] >= requireBalance);
 
         balancesToken[token][_user] = balancesToken[token][_user].sub(requireBalance);
         lockedBalancesSGB[token][_user] = lockedBalancesSGB[token][_user].add(requireBalance);
