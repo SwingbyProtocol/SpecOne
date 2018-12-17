@@ -1,6 +1,7 @@
 pragma solidity 0.5.0;
 
 import "./Token.sol";
+import "./SafeMath.sol";
 
 
 contract FundManager {
