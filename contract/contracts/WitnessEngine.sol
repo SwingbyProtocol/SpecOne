@@ -57,8 +57,8 @@ contract WitnessEngine is FundManager {
 
         require(balancesToken[address(token)][_user] >= requireBalance);
 
-        balancesToken[token][_user] = balancesToken[token][_user].sub(requireBalance);
-        lockedBalancesSGB[token][_user] = lockedBalancesSGB[token][_user].add(requireBalance);
+        balancesToken[address(token)][_user] = balancesToken[address(token)][_user].sub(requireBalance);
+        lockedBalancesSGB[address(token)][_user] = lockedBalancesSGB[address(token)][_user].add(requireBalance);
 
         Vote memory vote = Vote({
             mode: _mode,   // 0 => add, 1 => remove
@@ -129,8 +129,8 @@ contract WitnessEngine is FundManager {
      * @return vooid
      */
     function remove(address _user) internal {
-        uint amount = lockedBalancesSGB[token][_user];
-        balancesToken[token][_user] = balancesToken[token][_user].add(amount);
+        uint amount = lockedBalancesSGB[address(token)][_user];
+        balancesToken[address(token)][_user] = balancesToken[address(token)][_user].add(amount);
         witnesses[_user] = false;
     }
 
@@ -140,7 +140,7 @@ contract WitnessEngine is FundManager {
      * @return vooid
      */
     function reset(address _user) internal {
-        uint amount = lockedBalancesSGB[token][_user];
-        balancesToken[token][_user] = balancesToken[token][_user].add(amount);
+        uint amount = lockedBalancesSGB[address(token)][_user];
+        balancesToken[address(token)][_user] = balancesToken[address(token)][_user].add(amount);
     }
 }

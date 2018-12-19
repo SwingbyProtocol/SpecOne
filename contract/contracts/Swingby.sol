@@ -79,7 +79,8 @@ contract Swingby is FundManager, AddressManager, Config {
 
     event ConfirmedByWitness(
         uint    orderId,
-        address witness
+        address witness,
+        bytes   rawTx
     );
 
     event Cancelled(
@@ -124,7 +125,7 @@ contract Swingby is FundManager, AddressManager, Config {
         uint    remainDebts
     );
 
-    constructor(address _sv, address _we, address _oracle, address _sgb) public {
+    constructor(address _sv, address payable _we, address _oracle, address _sgb) public {
         sv = ScriptVerification(_sv);
         we = WitnessEngine(_we);
         btct = new Token("BTCTtest", "tBTCT", 18);
@@ -150,7 +151,7 @@ contract Swingby is FundManager, AddressManager, Config {
         uint _interest,
         uint _period,
         bytes32 _rHash,
-        bytes _pubkey
+        bytes memory _pubkey
     )
         public
     {
@@ -181,7 +182,7 @@ contract Swingby is FundManager, AddressManager, Config {
             rHash: _rHash,
             txId: 0x0,
             borrower: msg.sender,
-            lender: 0x0,
+            lender: address(0x0),
             sTime: 0,
             interest: _interest,
             period: _period,
@@ -201,7 +202,7 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _amountOfSGB Amount of security deposit (SGB) to be locked
      * @return void
      */
-    function confirmOrder(uint _orderId, bytes32 _txId, bytes _rs, uint _amountOfSGB) public {
+    function confirmOrder(uint _orderId, bytes32 _txId, bytes memory _rs, uint _amountOfSGB) public {
         Order storage order = orders[_orderId];
 
         bytes20 rsHash;
@@ -232,20 +233,20 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _rawTx _rawTx
      * @return void
      */
-    function confirmByWitness(uint _orderId, bytes _rawTx) public {
+    function confirmByWitness(uint _orderId, bytes memory _rawTx) public {
         Order storage order = orders[_orderId];
 
-        require(order.lender != 0x0);
+        require(order.lender != address(0x0));
 
         require(order.status == Status.opened);
 
         require(we.isWitness(msg.sender));
 
-        require(sv.verifyTx(_rawTx, order.txId, order.rsHash, order.amountOfSat, 0));
+        //require(sv.verifyTx(_rawTx, order.txId, order.rsHash, order.amountOfSat, 0));
 
         order.status = Status.verified;
 
-        emit ConfirmedByWitness(_orderId, msg.sender);
+        emit ConfirmedByWitness(_orderId, msg.sender, _rawTx);
     }
 
     /**
@@ -254,7 +255,7 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _sR secret with which the borrower will unlock the BTC of HTLC
      * @return void
      */
-    function cancelOrder(uint _orderId, bytes _sR) public {
+    function cancelOrder(uint _orderId, bytes memory _sR) public {
         Order storage order = orders[_orderId];
 
         require(order.borrower == msg.sender);
@@ -330,9 +331,9 @@ contract Swingby is FundManager, AddressManager, Config {
 
         require(order.borrower == msg.sender);
 
-        require(balanceOfToken(btct, order.borrower) >= order.amountOfSat);
+        require(balanceOfToken(address(btct), order.borrower) >= order.amountOfSat);
 
-        balancesToken[btct][order.borrower] = balancesToken[btct][order.borrower].sub(order.amountOfSat);
+        balancesToken[address(btct)][order.borrower] = balancesToken[address(btct)][order.borrower].sub(order.amountOfSat);
 
         lockedBalancesBTCT[order.borrower] = lockedBalancesBTCT[order.borrower].add(order.amountOfSat);
 
@@ -347,7 +348,7 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _sS The secret that the lender of BTCT used to lock BTC inside an HTLC
      * @return void
      */
-    function burn(uint _orderId, bytes _sS) public {
+    function burn(uint _orderId, bytes memory _sS) public {
         Order storage order = orders[_orderId];
 
         require(order.status == Status.burning);
@@ -371,8 +372,8 @@ contract Swingby is FundManager, AddressManager, Config {
         unlockSecurityDeposit(order.lender, order.amountOfSGB);
 
         // send fees to lender
-        balancesToken[sgb][order.borrower] = balancesToken[sgb][order.borrower].sub(feeSGB.mul(multiplexer));
-        balancesToken[sgb][order.lender] = balancesToken[sgb][order.lender].add(feeSGB.mul(multiplexer));
+        balancesToken[address(sgb)][order.borrower] = balancesToken[address(sgb)][order.borrower].sub(feeSGB.mul(multiplexer));
+        balancesToken[address(sgb)][order.lender] = balancesToken[address(sgb)][order.lender].add(feeSGB.mul(multiplexer));
 
         uint amountOfInterest = (order.period - order.sTime) / 365 days * order.interest;
         uint amountOfETH = 1 * 10 ** 18 * (order.amountOfSat * 100 / getPrice()) / 100;
@@ -428,9 +429,9 @@ contract Swingby is FundManager, AddressManager, Config {
      * @return void
      */
     function burnOnBehalf(uint _amountOfSat) public {
-        require(balanceOfToken(btct, msg.sender) >= _amountOfSat);
+        require(balanceOfToken(address(btct), msg.sender) >= _amountOfSat);
 
-        balancesToken[btct][msg.sender] = balancesToken[btct][msg.sender].sub(_amountOfSat);
+        balancesToken[address(btct)][msg.sender] = balancesToken[address(btct)][msg.sender].sub(_amountOfSat);
 
         debtPool = debtPool.sub(_amountOfSat);
 
@@ -449,7 +450,7 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _sR secret with which the borrower will unlock the BTC of HTLC
      * @return void
      */
-    function purge(uint _orderId, bytes _sR) public {
+    function purge(uint _orderId, bytes memory _sR) public {
         Order storage order = orders[_orderId];
 
         require(order.status == Status.liquidated);
@@ -543,7 +544,7 @@ contract Swingby is FundManager, AddressManager, Config {
      * @param _orderId BTCT loan orderId
      * @return boolean
      */
-    function liquidate(Order _order, uint _orderId) internal returns (bool) {
+    function liquidate(Order storage _order, uint _orderId) internal returns (bool) {
         unlockCollateralDeposit(_order.borrower, _order.amountOfWei);
 
         unlockSecurityDeposit(_order.borrower, borrowerSecurityDepositSGB * multiplexer);
@@ -568,9 +569,9 @@ contract Swingby is FundManager, AddressManager, Config {
      * @return void
      */
     function lockSecurityDeposit(address _user, uint _amount) internal {
-        require(balanceOfToken(sgb, _user) >= _amount);
+        require(balanceOfToken(address(sgb), _user) >= _amount);
 
-        balancesToken[sgb][_user] = balancesToken[sgb][_user].sub(_amount);
+        balancesToken[address(sgb)][_user] = balancesToken[address(sgb)][_user].sub(_amount);
 
         lockedBalancesSGB[_user] = lockedBalancesSGB[_user].add(_amount);
     }
@@ -584,7 +585,7 @@ contract Swingby is FundManager, AddressManager, Config {
     function unlockSecurityDeposit(address _user, uint _amount) internal {
         require(lockedBalancesSGB[_user] >= _amount);
 
-        balancesToken[sgb][_user] = balancesToken[sgb][_user].add(_amount);
+        balancesToken[address(sgb)][_user] = balancesToken[address(sgb)][_user].add(_amount);
 
         lockedBalancesSGB[_user] = lockedBalancesSGB[_user].sub(_amount);
     }
