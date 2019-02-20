@@ -5,14 +5,25 @@
   "productName": "Swingby App",
   "cordovaId": "network.swingby.app",
   "author": "DRI TECHNOLOGIES PTE. LTD.",
+  "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue src",
+    "dev": "quasar dev",
+    "build": "quasar build -m spa",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
-    "quasar": "^1.0.0-beta.0"
+    "bip39": "^2.5.0",
+    "bip65": "^1.0.3",
+    "bitcoinjs-lib": "^4.0.3",
+    "copy-anything": "^1.1.0",
+    "ky": "^0.8.0",
+    "quasar": "^1.0.0-beta.0",
+    "vuex-easy-access": "^3.1.5",
+    "vuex-easy-firestore": "^1.29.1",
+    "vuex-router-sync": "^5.0.0"
   },
   "devDependencies": {
     "@quasar/app": "^1.0.0-beta.0",

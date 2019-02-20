@@ -1,0 +1,22 @@
+// Reset specific HTML elements
+
+// <a href>
+reset-a()
+  text-decoration none
+  text-decoration-color none
+  color $text
+  &:focus
+    outline 0
+.reset-a
+  reset-a()
+
+// <button>
+reset-button()
+  padding 0
+  margin 0
+  background none
+  border none
+  &:focus
+    outline 0
+.reset-button
+  reset-button()

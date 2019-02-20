@@ -1,16 +1,12 @@
 <template>
-<div class="base-layout">
-  <router-view class="_content" />
-</div>
+  <div class="component-name">
+  </div>
 </template>
 
 <style lang="stylus" scoped>
 @import '~variables'
 
-.base-layout
-  min-height inherit
-._content
-  mx md
+// .component-name
 
 </style>
 
@@ -20,5 +16,11 @@ import storeAccess from '@mixins/storeAccess'
 export default {
   mixins: [ storeAccess ],
   // ⤷ commit(path, val)  dispatch(path, val)  state  get[]
+  computed:
+  {
+  },
+  methods:
+  {
+  }
 }
 </script>

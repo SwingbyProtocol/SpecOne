@@ -46,6 +46,12 @@ module.exports = {
     'import/no-unresolved': 'off',
     'import/no-extraneous-dependencies': 'off',
     'prefer-promise-reject-errors': 'off',
+    'comma-dangle': 'off',
+    'no-unused-vars': 'error',
+    'prefer-const': 'error',
+    'no-new': 'error',
+    'vue/valid-v-on': 'off',
+    'object-curly-spacing': 'off',
 
     // allow console.log during development only
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',

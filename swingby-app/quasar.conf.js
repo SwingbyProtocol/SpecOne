@@ -1,10 +1,12 @@
 // Configuration for your app
+const path = require('path')
 
 module.exports = function (ctx) {
   return {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     boot: [
+      'vuePlugins'
     ],
 
     css: [
@@ -23,19 +25,9 @@ module.exports = function (ctx) {
     // framework: 'all', // --- includes everything; for dev only!
     framework: {
       components: [
-        'QLayout',
-        'QHeader',
-        'QDrawer',
-        'QPageContainer',
-        'QPage',
-        'QToolbar',
-        'QToolbarTitle',
+        'QInput',
         'QBtn',
-        'QIcon',
-        'QList',
-        'QItem',
-        'QItemSection',
-        'QItemLabel'
+        'QMarkupTable'
       ],
 
       directives: [
@@ -67,13 +59,25 @@ module.exports = function (ctx) {
           loader: 'eslint-loader',
           exclude: /node_modules/
         })
+        cfg.resolve.alias = {
+          ...cfg.resolve.alias, // This adds the existing aliases
+          // Add your own alias like this:
+          'variables': path.resolve(__dirname, './src/css/variables.styl'),
+          '@router': path.resolve(__dirname, './src/router'),
+          '@store': path.resolve(__dirname, './src/store'),
+          '@modules': path.resolve(__dirname, './src/store/modules'),
+          '@components': path.resolve(__dirname, './src/components'),
+          '@mixins': path.resolve(__dirname, './src/components/mixins'),
+          '@helpers': path.resolve(__dirname, './src/helpers'),
+          '@config': path.resolve(__dirname, './src/config'),
+        }
       }
     },
 
     devServer: {
       // https: true,
       // port: 8080,
-      open: true // opens browser window automatically
+      open: false // opens browser window automatically
     },
 
     // animations: 'all' --- includes all animations

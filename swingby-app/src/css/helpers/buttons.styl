@@ -1,0 +1,52 @@
+
+o-btn($colour = $primary)
+  ma 0
+  border none
+  pa sm
+  font-size 1em
+  background-color $colour
+  color white
+  font-weight 500
+  border-radius $radius
+  white-space nowrap
+  text-decoration none
+  text-align center
+  display flex
+  justify-content center
+  user-select none
+  &:focus
+    outline 0
+  &:hover
+    background-color lighten($colour, 15%)
+.o-btn
+  o-btn($primary)
+.o-btn--s
+  o-btn($secondary)
+
+o-txt-btn($colour = $primary)
+  ma 0
+  border none
+  pa xs
+  font-size 1em
+  background none
+  color $colour
+  font-weight 400
+  white-space nowrap
+  text-decoration none
+  text-align center
+  display flex
+  justify-content center
+  &:focus
+    outline 0
+  &:hover
+    color lighten($colour, 20%)
+.o-txt-btn
+  o-txt-btn($primary)
+
+o-link($colour = $primary)
+  text-decoration none !important
+  color $colour
+  &:hover
+    color lighten($colour, 20%)
+.o-link
+  o-link()

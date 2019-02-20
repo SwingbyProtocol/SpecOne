@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-// import example from './module-example'
+import initStore from './root'
 
 Vue.use(Vuex)
 
@@ -11,11 +11,7 @@ Vue.use(Vuex)
  */
 
 export default function (/* { ssrContext } */) {
-  const Store = new Vuex.Store({
-    modules: {
-      // example
-    }
-  })
-
+  const Store = new Vuex.Store(initStore())
+  window.store = Store
   return Store
 }
