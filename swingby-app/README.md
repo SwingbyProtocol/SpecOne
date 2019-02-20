@@ -1,3 +1,7 @@
-# Quasar App
+# Swingby App
 
-> WIP
+Test local:
+
+```
+npm run dev
+```
