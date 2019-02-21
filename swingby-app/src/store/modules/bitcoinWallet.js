@@ -31,7 +31,7 @@ export default {
     setWallet (state, payload) {
       state.count++
       const name = 'wallet-' + state.count
-      this._vm.$set(state.wallets, name, payload)
+      this._vm.$set(state.wallets, name, {name, ...payload})
       this._vm.$delete(state.wallets, 'placeholder')
     },
     addPlaceholderWallet (state) {

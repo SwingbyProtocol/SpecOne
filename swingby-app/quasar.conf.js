@@ -27,7 +27,8 @@ module.exports = function (ctx) {
       components: [
         'QInput',
         'QBtn',
-        'QMarkupTable'
+        'QMarkupTable',
+        'QSelect'
       ],
 
       directives: [

@@ -3,19 +3,12 @@ import bip65 from 'bip65'
 const crypto = require('crypto')
 const Buffer = require('buffer').Buffer
 
-function utcNow () {
-  return Math.floor(Date.now() / 1000)
-}
-
-export default function createHTLC (secretRHashHex, endTime, senderPubkey, receiverPubkey, testnet = true) {
+export default function createHTLC (secretRHashHex, durationMs, senderPubkey, receiverPubkey, testnet = true) {
   return new Promise((resolve, reject) => {
     const secretRHash = Buffer.from(secretRHashHex, 'hex')
-    if (!endTime) {
-      endTime = bip65.encode({
-        utc: utcNow() + 1400
-      })
-    }
-
+    const endTime = bip65.encode({
+      utc: Date.now() + durationMs // about 23 min
+    })
     const senderPubkeyHash = bitcoin.crypto.hash160(senderPubkey)
     const receiverPubkeyHash = bitcoin.crypto.hash160(receiverPubkey)
 
