@@ -11,6 +11,10 @@
     "lint": "eslint --ext .js,.vue src",
     "dev": "quasar dev",
     "build": "quasar build -m spa",
+    "dev-ios": "quasar dev -m cordova -T ios -t ios --buildConfig",
+    "dev-an": "quasar dev -m cordova -T android -t ios",
+    "build-ios": "quasar build -m cordova -T ios -t ios",
+    "build-an": "quasar build -m cordova -T android -t ios",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
@@ -19,6 +23,7 @@
     "bip65": "^1.0.3",
     "bitcoinjs-lib": "^4.0.3",
     "copy-anything": "^1.1.0",
+    "ethereumjs-wallet": "^0.6.3",
     "ky": "^0.8.0",
     "quasar": "^1.0.0-beta.0",
     "request": "^2.88.0",

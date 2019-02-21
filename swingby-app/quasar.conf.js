@@ -130,7 +130,7 @@ module.exports = function (ctx) {
     },
 
     cordova: {
-      // id: 'org.cordova.quasar.app'
+      id: 'network.swingby.app'
     },
 
     electron: {

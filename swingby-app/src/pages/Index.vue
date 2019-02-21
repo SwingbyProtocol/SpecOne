@@ -85,6 +85,11 @@
       v-model="newHTLC.network"
       :options="dropdownOptions.network"
     />
+    Amount
+    <q-input
+      outlined
+      v-model="newHTLC.amount"
+    />
     <q-btn class="ma-sm" color="primary" @click="createHTLC()">Create HTLC</q-btn>
     <div class="_htlc-txs">
       <div v-for="txn in htlcTxs" :key="txn">
@@ -140,6 +145,7 @@ export default {
         senderPubkey: null,
         receiverPubkey: null,
         network: 'testnet',
+        amount: 0.02
       },
       htlcTxs: [],
       seedPhrase: '',
@@ -168,8 +174,9 @@ export default {
       console.log('htlc → ', htlc)
       console.log('htlc.htlcAddress → ', htlc.htlcAddress)
       const walletAddress = sender.address
-      const walletKeypair = senderPubkey
-      const txId = await sendBTCTransaction(walletAddress, walletKeypair, htlc.htlcAddress, 1, true)
+      const walletKeypair = sender.keyPair
+      const amount = Number(this.newHTLC.amount) * 1e8
+      const txId = await sendBTCTransaction(walletAddress, walletKeypair, htlc.htlcAddress, amount, true)
       this.htlcTxs.push(txId)
     },
   },

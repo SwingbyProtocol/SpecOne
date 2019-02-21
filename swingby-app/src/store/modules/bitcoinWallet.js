@@ -2,7 +2,7 @@ import copy from 'copy-anything'
 import bitcoin from 'bitcoinjs-lib'
 import bip39 from 'bip39'
 const crypto = require('crypto')
-// const Buffer = require('buffer').Buffer
+const hdkey = require('ethereumjs-wallet/hdkey')
 
 function initialState () {
   return copy({
@@ -58,10 +58,21 @@ export default {
       const seed = bip39.mnemonicToSeed(seedPhrase)
       // ↳ takes 1500ms
       const bitcoinNetwork = bitcoin.networks.testnet
-      const hdMaster = bitcoin.bip32.fromSeed(seed, bitcoinNetwork) // seed from above
-      const keyPair = hdMaster.derivePath(`m/44'/60'/0'/0/0`)
+      // senga
+      const hdMaster = hdkey.fromMasterSeed(seed, bitcoinNetwork) // seed from above
+      const singleWallet = hdMaster.derivePath(`m/44'/60'/0'/0/0`).getWallet()
+      const privKey = singleWallet.getPrivateKey()
+      console.log('privKey → ', privKey)
+      console.log('privKey.toString(\'hex\') → ', privKey.toString('hex'))
+      const keyPair = bitcoin.ECPair.fromPrivateKey(privKey, {
+        compressed: false,
+        network: bitcoinNetwork
+      })
+      // luca
+      // const hdMaster = bitcoin.bip32.fromSeed(seed, bitcoinNetwork) // seed from above
+      // const keyPair = hdMaster.derivePath(`m/44'/60'/0'/0/0`)
       const privateKey = keyPair.privateKey.toString('hex')
-      const { address } = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey })
+      const { address } = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey, network: bitcoinNetwork })
       // set state
       commit('setWallet', {seedPhrase, privateKey, address, keyPair, network: 'testnet'})
     },

@@ -26,6 +26,7 @@ export default function sendBTCTransaction (walletAddress, walletKeypair, htlcAd
     }
     const token = tokenList[Math.floor(Math.random() * tokenList.length)]
     const rootUrl = `https://api.blockcypher.com/v1/btc/${networkCypher}`
+    const key = walletKeypair
 
     var options = {
       method: 'POST',
@@ -51,7 +52,7 @@ export default function sendBTCTransaction (walletAddress, walletKeypair, htlcAd
 
       // (in)15000 - (out)12000 = (fee)3000, this is the miner fee
       result.tx.inputs.forEach((input, i) => {
-        txb.sign(i, walletKeypair)
+        txb.sign(i, key)
       })
 
       const data = {
