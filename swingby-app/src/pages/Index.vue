@@ -31,7 +31,11 @@
   </div>
   <div>
     <q-btn class="ma-sm" color="primary" @click="newWallet()">Create random wallet</q-btn>
-    <q-btn class="ma-sm" disabled>Create wallet from seed phrase</q-btn>
+  </div>
+  <div>
+    Custom seed phrase:
+    <q-input outlined v-model="seedPhrase" color="secondary" />
+    <q-btn class="ma-sm" color="secondary" @click="newWallet(seedPhrase)">Create wallet from seed phrase</q-btn>
   </div>
   <h3 class="mb-sm">HTLC Secret</h3>
   <q-markup-table separator="horizontal" class="mb-sm" v-for="secret in secrets" :key="secret.secret">
@@ -78,10 +82,15 @@
     BTC Network
     <q-select
       outlined
-      v-model="newHTLC.testnet"
-      :options="dropdownOptions.testnet"
+      v-model="newHTLC.network"
+      :options="dropdownOptions.network"
     />
     <q-btn class="ma-sm" color="primary" @click="createHTLC()">Create HTLC</q-btn>
+    <div class="_htlc-txs">
+      <div v-for="txn in htlcTxs" :key="txn">
+        <a :href="`https://live.blockcypher.com/btc-testnet/tx/${txn}/`">txn</a>
+      </div>
+    </div>
   </div>
 </div>
 </template>
@@ -89,7 +98,9 @@
 <style lang="stylus" scoped>
 @import '~variables'
 
-// .page-index
+.page-index
+  pa md
+  pb xxxl
 ._column1
   width 200px
 ._table
@@ -114,6 +125,7 @@
 import storeAccess from '@mixins/storeAccess'
 import bitcoin from 'bitcoinjs-lib'
 import createHTLC from '../helpers/createHTLC'
+import sendBTCTransaction from '../helpers/sendBTCTransaction'
 const crypto = require('crypto')
 
 export default {
@@ -124,11 +136,13 @@ export default {
       secrets: [],
       newHTLC: {
         secretRHashHex: null,
-        durationMs: null,
+        durationMs: {label: '23 min', value: 1.38e+6},
         senderPubkey: null,
         receiverPubkey: null,
         network: 'testnet',
-      }
+      },
+      htlcTxs: [],
+      seedPhrase: '',
     }
   },
   methods: {
@@ -146,11 +160,17 @@ export default {
     async createHTLC () {
       const secretRHashHex = this.newHTLC.secretRHashHex.value
       const durationMs = this.newHTLC.durationMs.value // in MS
-      const senderPubkey = this.state.bitcoinWallet.wallets[this.newHTLC.senderPubkey].keyPair.publicKey
+      const sender = this.state.bitcoinWallet.wallets[this.newHTLC.senderPubkey]
+      const senderPubkey = sender.keyPair.publicKey
       const receiverPubkey = this.state.bitcoinWallet.wallets[this.newHTLC.receiverPubkey].keyPair.publicKey
       const testnet = true
       const htlc = await createHTLC(secretRHashHex, durationMs, senderPubkey, receiverPubkey, testnet)
       console.log('htlc → ', htlc)
+      console.log('htlc.htlcAddress → ', htlc.htlcAddress)
+      const walletAddress = sender.address
+      const walletKeypair = senderPubkey
+      const txId = await sendBTCTransaction(walletAddress, walletKeypair, htlc.htlcAddress, 1, true)
+      this.htlcTxs.push(txId)
     },
   },
   computed: {
@@ -168,13 +188,13 @@ export default {
       const wallets = Object.keys(this.state.bitcoinWallet.wallets)
       const senderPubkey = wallets
       const receiverPubkey = wallets
-      const testnet = ['testnet']
+      const network = ['testnet']
       return {
         secretRHashHex,
         durationMs,
         senderPubkey,
         receiverPubkey,
-        testnet,
+        network,
       }
     }
   },

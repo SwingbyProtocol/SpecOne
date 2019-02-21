@@ -59,7 +59,7 @@ export default {
       // ↳ takes 1500ms
       const bitcoinNetwork = bitcoin.networks.testnet
       const hdMaster = bitcoin.bip32.fromSeed(seed, bitcoinNetwork) // seed from above
-      const keyPair = hdMaster.derivePath('m/0')
+      const keyPair = hdMaster.derivePath(`m/44'/60'/0'/0/0`)
       const privateKey = keyPair.privateKey.toString('hex')
       const { address } = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey })
       // set state
