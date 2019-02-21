@@ -1,28 +1,33 @@
 <template>
 <div class="page-index">
   <h3 class="mb-sm">BTC Wallets</h3>
-  <div class="_wallet-row" v-for="(wallet, key) in state.bitcoinWallet.wallets" :key="key">
-    <h6 class="my-sm">{{ key }}</h6>
-    <q-markup-table separator="horizontal">
-      <tbody>
-        <tr>
-          <td class="_column1">Wallet address</td>
-          <td>{{ wallet.address }}</td>
-        </tr>
-        <tr>
-          <td>Seed phrase</td>
-          <td>{{ wallet.seedPhrase }}</td>
-        </tr>
-        <tr>
-          <td>Private key</td>
-          <td>{{ wallet.privateKey }}</td>
-        </tr>
-        <tr>
-          <td>Network</td>
-          <td>{{ wallet.network }}</td>
-        </tr>
-      </tbody>
-    </q-markup-table>
+  <div class="_wallet-row" v-for="(wallet, key, i) in state.bitcoinWallet.wallets" :key="key">
+    <h6 class="my-sm">{{ `Wallet ${i + 1}` }}</h6>
+    <div class="_table">
+      <q-markup-table separator="horizontal">
+        <tbody>
+          <tr>
+            <td class="_column1">Wallet address</td>
+            <td>{{ wallet.address }}</td>
+          </tr>
+          <tr>
+            <td>Seed phrase</td>
+            <td>{{ wallet.seedPhrase }}</td>
+          </tr>
+          <tr>
+            <td>Private key</td>
+            <td>{{ wallet.privateKey }}</td>
+          </tr>
+          <tr>
+            <td>Network</td>
+            <td>{{ wallet.network }}</td>
+          </tr>
+        </tbody>
+      </q-markup-table>
+      <div class="_loading-mask" v-if="key === 'placeholder'">
+        Loading...
+      </div>
+    </div>
   </div>
   <div>
     <q-btn class="ma-sm" color="primary" @click="newWallet()">Create random wallet</q-btn>
@@ -57,6 +62,21 @@
 // .page-index
 ._column1
   width 200px
+._table
+  position relative
+  ._loading-mask
+    position absolute
+    left 0
+    right 0
+    top 0
+    bottom 0
+    background-color rgba(255, 255, 255, 0.5)
+    display flex
+    align-items center
+    justify-content center
+    font-size 2rem
+    font-weight 500
+    color #424242
 
 </style>
 
