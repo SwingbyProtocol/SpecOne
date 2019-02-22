@@ -15,12 +15,12 @@
             <td>{{ wallet.seedPhrase }}</td>
           </tr>
           <tr>
-            <td>Private key</td>
-            <td>{{ wallet.privateKey }}</td>
-          </tr>
-          <tr>
             <td>Network</td>
             <td>{{ wallet.network }}</td>
+          </tr>
+          <tr>
+            <td>Check balance</td>
+            <td><a :href="`https://live.blockcypher.com/btc-testnet/address/${wallet.address}`" target="_blank">Blockcypher</a> <q-icon name="open_in_new" class="ml-xs" /></td>
           </tr>
         </tbody>
       </q-markup-table>

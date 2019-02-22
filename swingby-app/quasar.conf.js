@@ -28,7 +28,8 @@ module.exports = function (ctx) {
         'QInput',
         'QBtn',
         'QMarkupTable',
-        'QSelect'
+        'QSelect',
+        'QIcon'
       ],
 
       directives: [
